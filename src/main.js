@@ -12,12 +12,12 @@ import { config } from './utils/device/WXDevice'
 import './utils/jquery-1.7.2'
 import './utils/newfemale'
 
-config(store, router)
+// config(store, router)
 
 Vue.config.productionTip = false
 Vue.use(YDUI)
 
-store.dispatch('mainthead')
+// store.dispatch('mainthead')
 
 /* eslint-disable no-new */
 new Vue({

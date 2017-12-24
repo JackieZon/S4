@@ -14,19 +14,18 @@
                     </div>
                     <div class="user_device">
                         <div class="device_status">
-                            <p>{{ deviceInfo.DeviceName }}</p>
-                            <p>{{ deviceInfo.userCodeVer }}<span :style="{'color':(deviceInfo.connectState?'#04be02':'red')}">&nbsp;&nbsp;（{{deviceInfo.connectState?'已连接':'未连接'}}）</span></p>
+                            <p>{{ deviceInfo.DeviceName || 'S4_1234567'}}</p>
                         </div>
-                    </div>
-                    <div class="hisrory" @click="openPages('HealthHistory',{})">
-                        健康历史
                     </div>
                 </div>
             </div>
-            <div class="device_info" @click="openPages('My',{})">
-                <img :src="battery[braceletVal-1]" alt="">
-                <img src="./../../assets/icon/right.svg" alt="">
+            <div class="device_info" @click="openPages('DeviceSet',{})">
+                <div class="set"><img src="./../../assets/images/set.png" alt="" srcset=""><div class="span">设置</div></div>
             </div>
+        </div>
+        <div class="healthItem">
+            <div class="item">健康历史</div>
+            <div class="item">动态心率</div>
         </div>
         <div class="device_options">
             <div class="option">
@@ -229,15 +228,14 @@
             align-items: center;
             flex-wrap: wrap;
             background: white;
-            // margin: .25rem 0;
-            margin-bottom: .25rem;
-            padding: .2rem 0 .2rem .2rem;
+            padding: 0 .2rem;
 
             .head {
+                flex: 1;
                 display: flex;
                 .portrait {
-                    width: 1.4rem;
-                    height: 1.4rem;
+                    width: .95rem;
+                    height: .95rem;
                     border-radius: 50%;
                     overflow: hidden;
                     img{
@@ -247,8 +245,8 @@
                 }
 
                 .user_info {
-                    width: 4.5rem;
-                    padding: .1rem .1rem .1rem .3rem;
+                    flex: 1;
+                    padding: 0 .1rem 0 .3rem;
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
@@ -279,7 +277,6 @@
                     }
 
                     .user_device {
-                        margin-top: .15rem;
                         font-size: .32rem;
                         display: flex;
                         align-items: center;
@@ -313,13 +310,30 @@
             }
             
             .device_info {
-                width: 1.2rem;
                 height: 1.4rem;
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
-                img {
-                    width: .58rem;
+                justify-content: center;
+                .set{
+                    background: #50c647;
+                    color: #fff;
+                    height: .33rem*2;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 0 .2rem*2;
+                    border-radius: .33rem*2;
+                    img{
+                        width: .18rem*2;
+                        height: .18rem*2;
+                        margin-right: .05rem*2;
+                    }
+                    .span{
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        line-height: 100%;
+                    }
                 }
             }
 
@@ -333,7 +347,32 @@
                 }
             }
         }
-
+        .healthItem{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fff;
+            border-top: 1px solid #ebebeb;
+            border-bottom: 1px solid #ebebeb;
+            line-height: .5rem*2;
+            position: relative;
+            margin-bottom: .15rem*2;
+            &::before{
+                position: absolute;
+                display: inline-block;
+                height: .5rem*2;
+                width: 1px;
+                left: 50%;
+                content: ' ';
+                background: #ebebeb;
+            }
+            .item{
+                flex: 1;
+                text-align: center;
+                font-size: .14rem*2;
+                color: #666;
+            }
+        }
         .device_options {
             width: 100%;
             display: flex;

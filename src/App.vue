@@ -24,7 +24,7 @@ export default {
 
   },
   mounted () {
-   this.getMemberInfo();
+    // this.getMemberInfo();
   },
   computed: {
       ...mapState({
