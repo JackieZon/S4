@@ -23,10 +23,20 @@
                 <div class="set"><img src="./../../assets/images/set.png" alt="" srcset=""><div class="span">设置</div></div>
             </div>
         </div>
-        <div class="healthItem">
+        <div class="health">
+            <yd-cell-item arrow>
+                <span slot="left">健康历史</span>
+            </yd-cell-item>
+            <yd-cell-item arrow>
+                <span slot="left">动态心率</span>
+            </yd-cell-item>
+        </div>
+
+        <!-- <div class="healthItem">
             <div class="item">健康历史</div>
             <div class="item">动态心率</div>
-        </div>
+        </div> -->
+
         <div class="device_options">
             <div class="option">
                 <div class="option_img">
@@ -345,6 +355,13 @@
                     height: .6rem;
                     font-size: .28rem;
                 }
+            }
+        }
+        .health{
+            background: #fff;
+            margin-bottom: 10px;
+            .yd-cell-item{
+                height: .4rem*2;
             }
         }
         .healthItem{
