@@ -14,6 +14,8 @@
     "echarts": "^3.8.3",
     "less": "^2.7.3",
     "less-loader": "^4.0.5",
+    "mint-ui": "^2.2.13",
+    "v-charts": "^1.15.0",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1",
     "vue-ydui": "^1.1.0"

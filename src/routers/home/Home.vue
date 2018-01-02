@@ -24,10 +24,10 @@
             </div>
         </div>
         <div class="health">
-            <yd-cell-item arrow>
+            <yd-cell-item arrow @click.native="openPages('HealthHistory',{})">
                 <span slot="left">健康历史</span>
             </yd-cell-item>
-            <yd-cell-item arrow>
+            <yd-cell-item arrow @click.native="openPages('Dynamic',{})">
                 <span slot="left">动态心率</span>
             </yd-cell-item>
         </div>
