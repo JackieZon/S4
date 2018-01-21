@@ -139,3 +139,41 @@ export const addDeviceDataPulse = async (param) => {
 export const addDeviceDataTempRHPress = async (param) => {
     return await axiosApi(`${apiUrl}uploadData/saveEnvi.wxhtml`, "postDataList", param.dataList);
 }
+
+/**
+ * 提交温湿度历史数据
+ * @param {object} param 设备ID和DataList
+ */
+export const postSaveHeartRate = async (param) => {
+    return await axiosApi(`${apiUrl}uploadData/saveHeartRate.wxhtml`, "postDataList", param);
+}
+
+/**
+ * 获取心率数据列表
+ */
+export const getHeartRateList = async (param) => {
+    let userId = window.localStorage.userId;
+    return await axiosApi(`${apiUrl}dynamicHr/getHeartRateList?userId=${userId}&measureType=5&deviceType=3&date=${param.date}`, "get", param);
+}
+
+// http://test.hesvit.com/wx/dynamicHr/delete
+
+/**
+ * 删除心率数据列表
+ */
+export const getHeartRateDelete = async (param) => {
+    let userId = window.localStorage.userId;
+    let { id } = param
+    return await axiosApi(`${apiUrl}dynamicHr/delete?id=${id}`, "get", param);
+}
+
+// http://test.hesvit.com/wx/dynamicHr/getDynamicHeartRateDetail
+
+/**
+ * 删除心率数据列表
+ */
+export const getDynamicHeartRateDetail = async (param) => {
+    let userId = window.localStorage.userId;
+    let { id } = param
+    return await axiosApi(`${apiUrl}dynamicHr/getDynamicHeartRateDetail?heartRateId=${id}`, "get", param);
+}

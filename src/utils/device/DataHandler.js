@@ -1,9 +1,11 @@
 ﻿import { bytesToNumber, toAscii, bytesToHex } from './HexUtils'
 import { Cmd } from './Packet'
-import { alert, notify } from './../toast'
+import { alert, notify, toast } from './../toast'
 import { senddataBytes } from './../device/WXDevice'
 import { l } from './../base'
 import { addDeviceDataSleep, addDeviceDataSport, addDeviceDataPulse, addDeviceDataTempRHPress } from './../../sverse/api'
+
+let hrCountFig = 1;
 /**
 *  数据处理程序
  * @param {number} cmd Cmd.枚举 指令
@@ -65,17 +67,15 @@ export function DataHandler(cmd, framesize, t_data) {
         DataHandler.prototype.DecodePacket = function (packet) {
 
             l.i('DataHandler.DecodePacket')
-
             // 判断设备返回数据得到 0请求帧 1-10 数据帧  11发送完成 12接收错误 13接收正确 14允许发送 15数据总长度
             switch (packet.Cmd) {
                 case Cmd.setTime: {
                     if (packet.FrameNum.datadomain == 13) {
                         console.log('时间设置成功！')
-                        dispatch('taskQueueExec', { isSetSuccess: true })
+                        dispatch('taskQueueExec', { QueueName: 'setLCDDTime' })
                         commit('configSet', { lastSetTime: new Date() })
                     } else {
-                        console.log('时间设置成功！')
-                        l.e({ msg: '设置失败！' })
+                        l.e({ msg: '时间设置失败！' })
                     }
                     break;
                 }
@@ -83,7 +83,7 @@ export function DataHandler(cmd, framesize, t_data) {
                     {
                         if (packet.FrameNum.datadomain == 13) {
                             l.w('读取电量成功！')
-                            dispatch('taskQueueExec', { isSetSuccess: true })
+                            dispatch('taskQueueExec', { QueueName: 'getBattery' })
                             let bracelet = bytesToNumber(packet.Data.slice(0, 1));
                             dispatch('deviceInfoSet', { bracelet: bracelet })
                             l.w(`电量${bracelet}`)
@@ -96,7 +96,7 @@ export function DataHandler(cmd, framesize, t_data) {
                     {
                         if (packet.FrameNum.datadomain == 13) {
                             l.w('读取里程成功！')
-                            dispatch('taskQueueExec', { isSetSuccess: true })
+                            dispatch('taskQueueExec', { QueueName: 'getLCDDisplayDataNew' })
 
                             var km = bytesToNumber(packet.Data.slice(4, 6));
                             if (km > 0) km = (km / 10).toFixed(1);
@@ -123,11 +123,11 @@ export function DataHandler(cmd, framesize, t_data) {
                                 l.w(`身高${Height}cm,体重${Weight}kg`)
 
 
-                                dispatch('taskQueueExec', { isSetSuccess: true })
+                                dispatch('taskQueueExec', { QueueName: 'getPersonalInfo' })
                             }
                             else {
                                 l.w('设置身高体重成功！')
-                                dispatch('taskQueueExec', { isSetSuccess: true })
+                                dispatch('taskQueueExec', { QueueName: 'setPersonalInfo' })
                             }
                         } else {
                             l.e({ msg: '读取或设置身高体重失败！' })
@@ -137,8 +137,10 @@ export function DataHandler(cmd, framesize, t_data) {
                 case Cmd.FlashingWarningThreshold:
                     {
                         if (packet.FrameNum.datadomain == 13) {
-                            if (packet.DataLen == 6) {
+                            console.error(`阈值的数据长度是【${packet.DataLen}】`)
+                            if (packet.DataLen>4) {
                                 l.w('读取提醒阀值成功！')
+                                
 
                                 var rawDeviceSetHeartRateMax = bytesToNumber(packet.Data.slice(0, 1));
                                 var rawDeviceSetStepTarget = bytesToNumber(packet.Data.slice(1, 3));
@@ -156,11 +158,11 @@ export function DataHandler(cmd, framesize, t_data) {
 
                                 l.w(`心率${rawDeviceSetHeartRateMax},步数目标${rawDeviceSetStepTarget},温差${rawDeviceSetTempDiff}`)
 
-                                dispatch('taskQueueExec', { isSetSuccess: true })
+                                dispatch('taskQueueExec', { QueueName: 'getFlashingWarningThreshold' })
                             }
                             else {
                                 l.w('设置提醒阀值成功！')
-                                dispatch('taskQueueExec', { isSetSuccess: true })
+                                dispatch('taskQueueExec', { QueueName: 'setFlashingWarningThreshold' })
                             }
                         } else {
                             l.e({ msg: '读取或设置提醒阀值失败！' })
@@ -171,7 +173,7 @@ export function DataHandler(cmd, framesize, t_data) {
                     {
                         if (packet.FrameNum.datadomain == 13) {
                             l.w('读取手环版本成功！')
-                            dispatch('taskQueueExec', { isSetSuccess: true })
+                            dispatch('taskQueueExec', { QueueName: 'getUserCodeVer' })
 
                             var ver = toAscii(bytesToHex(packet.Data)).replace("?", '');
 
@@ -186,7 +188,7 @@ export function DataHandler(cmd, framesize, t_data) {
                     {
                         if (packet.FrameNum.datadomain == 13) {
                             l.w('读取节日提醒成功 女性生理周期成功！')
-                            dispatch('taskQueueExec', { isSetSuccess: true })
+                            dispatch('taskQueueExec', { QueueName: 'getHolidayReminder' })
 
                             var remindonstate = bytesToNumber(packet.Data.slice(0, 1));
                             var cycle = bytesToNumber(packet.Data.slice(1, 2));
@@ -197,6 +199,100 @@ export function DataHandler(cmd, framesize, t_data) {
                             l.w(`开关显示${remindonstate}，周期${cycle}，下次提醒天数${nextremind}`)
                         } else {
                             l.e({ msg: '读取节日提醒失败！' })
+                        }
+                        break;
+                    }
+                case Cmd.dynamicHeartRate:
+                    {
+                        if (packet.FrameNum.datadomain == 13) {
+
+                            if(packet.Cmdx==1){
+
+                                this['num'] = 0;
+
+                                this['loopHeartRate'] = setInterval(()=>{
+                                    
+                                    // 保存定时器到数据中心
+                                    commit('setDynamicHeartRate', {heartRateTimer: this.loopHeartRate});
+
+                                    this.num++;
+                                    if(this.num<5000){
+                                        dispatch('pushDynamicHeartRate')
+                                    }else{
+                                        console.error(`读取动态心率次数【${this.num}】关闭循环方法【${this.loopHeartRate}】`)
+                                        clearInterval(this.loopHeartRate)
+                                    }
+                                    
+                                    // 设备链接断开或者是动态心率按钮关闭时 就关闭读取动态心率
+                                    if((t_data.state.main.deviceInfo.connectState==false)&&(t_data.state.main.deviceInfo.WXDeviceLibState!==1)){
+                                        clearInterval(this.loopHeartRate)
+                                    }
+                                    
+                                },1000)
+                                
+                                toast({msg: '动态心率已打开'})
+                                console.error(`已【打开】动态心率【1】`);
+
+                                // commit('setDynamicHeartRate', {status: 1}) // 保存状态已打开 打开后执行采集数据
+
+                            }else if(packet.Cmdx==2){
+
+                                // commit('setDynamicHeartRate', {status: 2}) // 保存状态 正在同步接收同步数据
+                                
+                                console.error(`执行读取心率循环函数开头【第${this.num}次】【typeof ${ typeof(this.num) }】
+                                    设备链接状态【${vm.deviceInfo.connectState}】
+                                    动态心率的开关状态【${vm.dynamicHeartRate.status}】
+                                    动态心率的开关状态的类型【${typeof(vm.dynamicHeartRate.status)}】
+                                    测量次数${hrCountFig}
+                                    读取心率值 【结果↓】
+                                `)
+                                console.error(packet.Data)
+
+                                let now = new Date();
+                                let nowtimebytes = [now.getFullYear(), (now.getMonth() + 1), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()];
+                                let date = `${now.getFullYear()}-${(now.getMonth() + 1)}-${now.getDate()}`
+                                let time = `${now.getHours()<10?'0'+now.getHours():now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`
+                                let valType = bytesToNumber(packet.Data.slice(0, 1));
+                                let valx = bytesToNumber(packet.Data.slice(1, 2));
+
+                                if(valType == 2){
+
+                                    if(valx&&valx<255&&valx!==1){
+                                        commit('pushHeartRateList', {testTime: `${date} ${time}`, hrCount: valx})
+                                    }else if(valx==1||valx==255){
+                                        if(hrCountFig==1||(hrCountFig%10)==0){
+                                            toast({msg: '测量中，请稍后...'});
+                                            hrCountFig = hrCountFig+1;
+                                        }
+                                    }
+
+                                }else{
+                                    // toast({msg: '正在检测心率请稍后'})
+                                    if(this.num==1){
+                                        toast({msg: '正在检测心率请稍后'})
+                                    }
+                                    console.log('正在检测心率请稍后')
+                                    // clearInterval(this.loopHeartRate);
+                                }
+                                
+                                
+
+                            }else if(packet.Cmdx==3){
+
+                                toast({msg: '动态心率已关闭'});
+                                console.log(`已【关闭】动态心率【3】`);
+                                clearInterval(this.loopHeartRate);
+                                commit('setDynamicHeartRate', {status: 3}); // 保存状态 关闭动态心率
+
+                            }
+
+                            // dispatch('taskQueueExec', { QueueName: true })
+                            // var remindonstate = bytesToNumber(packet.Data.slice(0, 1));
+                            // dispatch('deviceInfoSet', { remindonstate: remindonstate, cycle: cycle, nextremind: nextremind })
+
+                        } else {
+                            toast({msg: '动态心率打开失败，请重试。'});
+                            commit('setDynamicHeartRate', {status: 3});
                         }
                         break;
                     }
@@ -235,7 +331,7 @@ export function DataHandler(cmd, framesize, t_data) {
                         // if (!(typeof this.ReceiveSuccess == "undefined")) {
                         //     //this.ReceiveSuccess();
                         // }
-                        dispatch('taskQueueExec', { isSetSuccess: true })
+                        dispatch('taskQueueExec', { QueueName: packet.QueueName })
                     }
                 }
                 //传输完成
@@ -261,7 +357,7 @@ export function DataHandler(cmd, framesize, t_data) {
                             }
 
                             setTimeout(()=>{
-                                dispatch('taskQueueExec', { isSetSuccess: true })
+                                dispatch('taskQueueExec', { QueueName: packet.QueueName })
                             }, 1500)
                             
                         });
@@ -302,7 +398,7 @@ export function LCDDisplayDataHandler(t_data) {
                 //     //vm.ReadHistory();
                 // }
                 //if (!vm.config.LCDDisplayDataHandlerSuccessFlag)
-                    dispatch('taskQueueExec', { isSetSuccess: true })
+                    dispatch('taskQueueExec', { QueueName: packet.QueueName })
 
                 commit('configSet', { 'LCDDisplayDataHandlerSuccessFlag': true })
 
@@ -325,7 +421,17 @@ export function LCDDisplayDataHandler(t_data) {
                     temperature: temperature,
                     pressure: pressure,
                 })
-                l.w(vm.LCDDisplayData)
+                console.log('已读取设备显示信息')
+                console.log({
+                    sportstep: sportstep,
+                    calorie: calorie,
+                    sleephour: sleephour,
+                    heartrate: heartrate,
+                    bodysurfacetemp: bodysurfacetemp,
+                    humidity: humidity,
+                    temperature: temperature,
+                    pressure: pressure,
+                })
             }
         };
         LCDDisplayDataHandler._initialized = true;
@@ -400,7 +506,6 @@ export function SleepDataHandler(t_data) {
                 var SleepDuration = (SleepDurationHours * 60 + SleepDurationMinutes) * 60 + SleepDurationSeconds;
 
                 let postData = {
-                    "userId": 1, //用户ID
                     "deviceType": 2, //设备类型 0:h1,1:G1,2:S3,3:S4
                     "type": 0,     //0：走路，1：跑步
                     "stepNum": 12000,  //步数
@@ -413,7 +518,6 @@ export function SleepDataHandler(t_data) {
                 }
 
                 var param = {
-                    userId: '',
                     type: SleepStatus,
                     deviceType: 2,
                     startTime: SleepStartTime,
@@ -425,7 +529,6 @@ export function SleepDataHandler(t_data) {
 
                 // let arrs = [
                 //     {
-                //         "userId":1,
                 //         "type":1,
                 //         "deviceType":1,
                 //         "startTime":"2017-11-11 11:11:11",
@@ -515,7 +618,6 @@ export function SportDataHandler(t_data) {
                 var SportCalorie = bytesToNumber(packet.Data.slice(12, 14));
 
                 var param = {
-                    userId: '',
                     deviceType: 2,//设备类型
                     type: SportStatus,//运动状态
                     stepNum: SportStepCount,//步数
@@ -529,7 +631,6 @@ export function SportDataHandler(t_data) {
 
                 // var data = [
                 //     {
-                //         "userId": 1, //用户ID
                 //         "deviceType": 2, //设备类型 0:h1,1:G1,2:S3,3:S4
                 //         "type": 0,     //0：走路，1：跑步
                 //         "stepNum": 12000,  //步数
@@ -615,7 +716,6 @@ export function TempRHPressDataHandler(t_data) {
                 var RecordTime = '20' + String(RecordTimeYear).PadLeft(2) + '-' + RecordTimeMonth + '-' + RecordTimeDay + ' ' + RecordTimeHours + ':' + (RecordTimeMinutes<10?'0'+RecordTimeMinutes:RecordTimeMinutes) + ':' + (RecordTimeSeconds<10?'0'+RecordTimeSeconds:RecordTimeSeconds);
 
                 var param = {
-                    userId: 0,
                     deviceType: 2,
                     wecDeviceId: getStorage.deviceId(),
                     temperature: Number(Temp),
@@ -627,7 +727,6 @@ export function TempRHPressDataHandler(t_data) {
 
                 // var data = [
                 //     {
-                //      "userId":369,       //用户主键ID
                 //      "deviceType":2,     //设备类型0:h1,1:G1，2：S3,3:S4
                 //      "deviceId":3,       //设备id
                 //      "temperature": 35.3,//温度：摄氏度
@@ -719,10 +818,8 @@ export function PulseDataHandler(t_data) {
                 var RecordTime = '20' + String(RecordTimeYear).PadLeft(2) + '-' + RecordTimeMonth + '-' + RecordTimeDay + ' ' + RecordTimeHours + ':' + RecordTimeMinutes + ':' + RecordTimeSeconds;
 
                 var param = {
-                    userId: '',
                     wecDeviceId: getStorage.deviceId(),
                     hrCount: Pulse,
-                    result: '',
                     deviceType: 2,
                     type: SportStatus,
                     measureType: StartType,
@@ -732,7 +829,6 @@ export function PulseDataHandler(t_data) {
 
                 // var data = [
                 //     {
-                //     "userId": 72,       //用户id
                 //     "deviceId":1,       //设备id
                 //     "hrCount": 95,       //心率值
                 //     "result": 1,       //-1偏低、0理想、1正常、2偏快

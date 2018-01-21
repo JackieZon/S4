@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" name="viewport" />
@@ -9,14 +8,6 @@
   <meta content="telephone=no" name="format-detection" />
   <title></title>
   <style>
-    .DefaultDiv{
-      color: #ff1432;
-      color: #59c2ff;
-      color: #ff1432;
-      color: #59c2ff;
-      color: #006934;
-      color: #777;
-    }
     body {
       background: #ebebeb;
     }
@@ -25,28 +16,28 @@
   <script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
   <script src="./static/js/base.js"></script>
   <script src="./static/js/jquery.js"></script>
-  <!-- <script src="./static/js/vconsole.min.js"></script> -->
+  <script src="./static/js/vconsole.min.js"></script>
   <script>
-      function getUrlParam(name) {
-          // 构造一个含有目标参数的正则表达式对象、匹配目标参数
-          var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)');
-          var param = window.location.search.substr(1).match(reg);
+      // function getUrlParam(name) {
+      //     // 构造一个含有目标参数的正则表达式对象、匹配目标参数
+      //     var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)');
+      //     var param = window.location.search.substr(1).match(reg);
 
-          // 返回参数值
-          if (param !== null) {
-              return decodeURIComponent(param[2]);
-          } else {
-              return null;
-          }
-      }
+      //     // 返回参数值
+      //     if (param !== null) {
+      //         return decodeURIComponent(param[2]);
+      //     } else {
+      //         return null;
+      //     }
+      // }
 
-      (function(){
-        var route =getUrlParam('route');
-        window.localStorage.setItem('route',route)
-        if(route){
-          location.href = '#/'+ route;
-        }
-      })()
+      // (function(){
+      //   var route =getUrlParam('route');
+      //   window.localStorage.setItem('route',route)
+      //   if(route){
+      //     location.href = '#/'+ route;
+      //   }
+      // })()
       
   </script>
 </head>
@@ -59,7 +50,7 @@
 <!--<script src="./static/js/WXDevice.js" ></script>-->
 <script async="async">
 
-  //  var vConsole = new VConsole();
+   var vConsole = new VConsole();
   
 </script>
 

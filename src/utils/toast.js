@@ -13,12 +13,12 @@ export const toast = ({msg, time}) => {
     Toast({mes: msg, timeout: time || 2000});
 }
 
-export const confirm = ({title, mes, opts}) => {
+export const confirm = ({title, msg, opts}) => {
 
     return new Promise((resolve, reject)=>{
         Confirm({
-            title: title || '温馨提示',
-            mes: mes || '提醒',
+            title: title,
+            mes: msg || '提醒',
             opts: [{
                 txt: '取消',
                 color: false,

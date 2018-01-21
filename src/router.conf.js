@@ -5,6 +5,7 @@ const My = resolve => require(['./routers/my/My.vue'], resolve);
 const DeviceSet = resolve => require(['./routers/deviceSet/DeviceSet.vue'], resolve);
 const Dynamic = resolve => require(['./routers/dynamic/Dynamic.vue'], resolve);
 const DynamicRecord = resolve => require(['./routers/dynamicRecord/DynamicRecord.vue'], resolve);
+const DynamicInfo = resolve => require(['./routers/dynamicInfo/DynamicInfo.vue'], resolve);
 const StepSettings = resolve => require(['./routers/deviceSet/StepSettings.vue'], resolve);
 const RelationDevice = resolve => require(['./routers/deviceSet/relationDevice/RelationDevice.vue'], resolve);
 const DeviceInfo = resolve => require(['./routers/deviceSet/DeviceInfo.vue'], resolve);
@@ -39,6 +40,11 @@ export default new Router({
       path: '/DynamicRecord',
       name: 'DynamicRecord',
       component: DynamicRecord,
+    },
+    {
+      path: '/DynamicInfo/:id',
+      name: 'DynamicInfo',
+      component: DynamicInfo,
     },
     {
       path: '/My',

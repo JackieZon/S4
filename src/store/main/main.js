@@ -6,10 +6,12 @@ import { Cmd } from './../../utils/device/Packet'
 import { DataHandler, LCDDisplayDataHandler, SleepDataHandler, SportDataHandler, TempRHPressDataHandler, PulseDataHandler } from './../../utils/device/DataHandler'
 import { senddataBytes } from './../../utils/device/WXDevice'
 import { bytesToHex, byteToHex, hexToBytes } from './../../utils/device/HexUtils'
+import { confirm } from './../../utils/toast'
 
 let state = {
     taskQueue: [
         {
+            // 屏幕显示数据
             name: 'getLCDDisplayData',
             isExec: false
         },
@@ -19,6 +21,7 @@ let state = {
             isExec: false
         },
         {
+            // 手环电量查询
             name: 'getBattery',
             isExec: false
         },
@@ -30,7 +33,7 @@ let state = {
         {
             //读取提醒阈值
             name: 'getFlashingWarningThreshold',
-            isExec: false
+            isExec: true
         },
         {
             //设置提醒阈值
@@ -115,7 +118,7 @@ let state = {
     deviceInfo: {
         deviceId: '',
         deviceType: '',
-        connectState: false,
+        connectState: false, // 设备已连接状态
 
         //心率提醒参数
         heartRateSwitch: false,
@@ -180,12 +183,33 @@ let state = {
         humidity: null,
         temperature: null,
         pressure: null
-
     },
-    tooltipInfo: ''             //顶部提示信息
+    tooltipInfo: '',             //顶部提示信息
+    dynamicHeartRate: {
+        heartRateTimer: 0,
+        status: 3,               // 1已打开 2同步中 3关闭 
+        heartRateList: [],
+    }
 }
 
 const mutations = {
+    pushHeartRateList(state, payload){
+        
+        console.error(`保存到store中,【${payload.hrCount}】`)
+        state.dynamicHeartRate.heartRateList.push(payload)
+        
+    },
+    clearHeartRateList(state, payload){
+        console.log('执行清空心率数据')
+        state.dynamicHeartRate.heartRateList = []
+    },
+    setDynamicHeartRate(state, payload){
+        if(payload.status==3){
+            console.log('关闭循环读取心率数据')
+            clearInterval(state.dynamicHeartRate.heartRateTimer)
+        }
+        state.dynamicHeartRate = {...state.dynamicHeartRate, ...payload}
+    },
     deviceInfoSetingSet(state, payload) {
         state.deviceInfoSeting = {...state.deviceInfoSeting, ...payload}
     },
@@ -218,10 +242,15 @@ const mutations = {
         state.taskQueueTimeLast = new Date()
     },
     tooltipInfoSet(state, payload) {
-        l.w('更新到Store')
+        // l.w('更新到Store')
         l.w(payload)
         state.tooltipInfo = payload
-    }
+    },
+    // changeQueue(state, payload) {
+    //     // l.w('更新到Store')
+    //     l.w(payload)
+    //     state.taskQueue[payload.index] = payload.obj
+    // },
 }
 
 const actions = {
@@ -232,20 +261,36 @@ const actions = {
         commit('deviceInfoSet', payload);
     },
     mainthead({ commit, state, dispatch, getters }, payload) {
-        let { WXDeviceLibState, lastReceiveSuccessTime, LCDDisplayDataHandlerSuccessFlag, taskQueueTimeLast, lastSendSuccessTime } = state.config
+        let { WXDeviceLibState, lastReceiveSuccessTime, taskQueueTimeLast, lastSendSuccessTime } = state.config
+
+        // console.log(`
+        //     WXDeviceLibState: 保存的设备库状态(蓝牙状态); =1(蓝牙已打开) =2(微信未授权蓝牙) =3(蓝牙未打开) =4(设备库初始化失败)
+        //     lastReceiveSuccessTime: 成功接收蓝牙数据的时间
+        //     taskQueueTimeLast: 上一次执行队列任务的时间
+        //     lastSendSuccessTime: 数据发送成功的时间
+        // `)
+
         let { connectState } = state.deviceInfo
         //保持单例运行
         if (state.mainTheadRunIng) return;
-        l.i('主函数运行')
+        // l.i('运行中...')
         commit('saveMainTheadRunIng', true)
         try {
+
             //读取历史记录超过13秒未响应（需要配合接收超时的重试间隔和次数）
+            // console.log(`尝试执行队列任务 以下是状态`)
+            // console.log(`
+            //     WXDeviceLibStateL(蓝牙连接状态): 【 ${WXDeviceLibState} 】,
+            //     connectState(设备连接状态): 【 ${connectState} 】,
+            //     (new Date().getTime() / 1000 - taskQueueTimeLast.getTime() / 1000): 【 ${ ((new Date().getTime() / 1000 - taskQueueTimeLast.getTime() / 1000) > 3) } 】
+            //     (sendTimeOut === null || ((new Date().getTime() / 1000 - lastSendSuccessTime.getTime() / 1000) > 13))：【 ${(sendTimeOut === null || ((new Date().getTime() / 1000 - lastSendSuccessTime.getTime() / 1000) > 13))} 】
+            // `)
+
             if (WXDeviceLibState == 1
                 && connectState
                 && (new Date().getTime() / 1000 - taskQueueTimeLast.getTime() / 1000) > 3
-                // && (new Date().getTime() / 1000 - lastSendSuccessTime.getTime() / 1000) > 2
-                && (sendTimeOut === null || ((new Date().getTime() / 1000 - lastSendSuccessTime.getTime() / 1000) > 13))
                 && (new Date().getTime() / 1000 - lastReceiveSuccessTime.getTime() / 1000) > 13
+                && (sendTimeOut === null || ((new Date().getTime() / 1000 - lastSendSuccessTime.getTime() / 1000) > 13))
             ) {
                 commit('taskQueueTimeLastSet') // 保存当前执行时间
                 dispatch('taskQueueExec', {})
@@ -262,32 +307,46 @@ const actions = {
 
     },
     taskQueueExec: function ({ commit, state, dispatch, getters }, payload) {
-       // l.i('taskQueueExec')
+
+        // console.log(`开始执行队列任务：【 taskQueueExec 】`)
         let { taskQueue, taskQueueIndex } = state
-        let { isSetSuccess } = payload
+        let { QueueName } = payload
 
-        if (isSetSuccess) {
-            commit('taskQueueSet', { index: taskQueueIndex })
-            taskQueueIndex += 1
-            commit('taskQueueIndexSet', taskQueueIndex)
-            //单次任务执行完成，开始执行循环任务
-            if (taskQueueIndex >= (taskQueue.length - 1))
-                dispatch('readLCDDataThead')
+        // 改变执行完的任务状态
+        console.warn('执行改变任务状态方法前');
+        console.warn(`QueueName:【${QueueName}】`);
+        console.warn(`QueueName typeOf:【${typeof QueueName}】`);
+
+        if(QueueName){
+            console.warn(`接收到同步完成标记的任务【${QueueName}】`);
+            QueueNameFor:
+                for (let task = 0; task < taskQueue.length; task++){
+                    if(taskQueue[task].name == QueueName){
+                        commit('taskQueueSet', { index: task });
+                        break QueueNameFor;
+                    }
+                }
         }
 
-        console.warn('taskQueue-isExec数据')
-        console.warn(taskQueue[taskQueueIndex])
-        
-        if (taskQueueIndex < taskQueue.length && taskQueue[taskQueueIndex]!=='undefined') {
-            if (!taskQueue[taskQueueIndex].isExec) {
-                dispatch(taskQueue[taskQueueIndex].name)
+        // 执行未执行的任务
+        QueueLoop:
+            for (let i = 0; i < taskQueue.length; i++){
+
+                console.warn(`执行【${taskQueue[i].name}】状态是${taskQueue[i].isExec}`)
+
+                if(taskQueue[i].isExec === false){
+                    console.warn(`状态通过，立即执行【${ taskQueue[i].name }】`)
+                    dispatch(taskQueue[i].name)
+                    break QueueLoop;
+                }
+                let taskLen = taskQueue.length;
+                if((taskLen - 1) == i){
+                    console.warn('单项任务已执行完。')
+                    dispatch('readLCDDataThead')
+                }
+
             }
-            //已执行，讲index自动升位
-            else {
-                taskQueueIndex += 1
-                commit('taskQueueIndexSet', taskQueueIndex)
-            }
-        }
+
     },
     readLCDDataThead({ commit, state, dispatch, getters }, payload) {
         let { WXDeviceLibState,
@@ -303,9 +362,11 @@ const actions = {
         let { connectState } = state.deviceInfo
         try {
            // l.i('readLCDDataThead')
-            const { taskQueue, taskQueueIndex } = state
+            const { taskQueue, taskQueueIndex, dynamicHeartRate } = state
+
             //没有在读取历史数据
-            if (WXDeviceLibState == 1 && taskQueueIndex >= taskQueue.length - 1) {
+            let taskLen = taskQueue.length;
+            if (WXDeviceLibState == 1 && taskQueue[taskLen-1].isExec && dynamicHeartRate.status==3) {
                 //设备处于连接状态 且 已经超过读取间隔
                 //l.i(`connectState=${connectState}||lastReadLCDDataTime=${((new Date().getTime() / 1000) - (lastReadLCDDataTime.getTime() / 1000))}||readLCDDataInterval=${readLCDDataInterval}||TempRHPressDataHandlerSuccessFlag=${TempRHPressDataHandlerSuccessFlag}`)
                 if (connectState &&
@@ -328,7 +389,7 @@ const actions = {
         }
     },
     getLCDDisplayData: function ({ commit, state, dispatch, getters }, payload) {
-
+        // console.log(`执行读取手环数据：【 getLCDDisplayData 】`)
         let t_data = this;
         if (typeof (window.lcdDisplayDataHandler) !== 'function') {
             (function () {
@@ -353,8 +414,8 @@ const actions = {
     setLCDDTime({ commit, state, dispatch, getters }, payload) {
         var now = new Date();
         var nowtimebytes = [now.getFullYear() - 2000, (now.getMonth() + 1), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()];
-        console.log('同步设置时间')
-        console.log(bytesToHex(nowtimebytes))
+        // console.log('同步设置时间')
+        // console.log(bytesToHex(nowtimebytes))
         dispatch('SendCmd', { cmd: Cmd.setTime, data: bytesToHex(nowtimebytes) });
     },
     getBattery({ commit, state, dispatch, getters }, payload) {
@@ -373,13 +434,13 @@ const actions = {
             && (state.userInfo.height != state.deviceInfo.Height || state.userInfo.weight != state.deviceInfo.Weight)) {
             const { height, weight } = state.userInfo
             l.w(`Height:${height},Weight:${weight}`)
-            console.log(`设置的身高数据:${bytesToHex([height, weight])}`)
+            // console.log(`设置的身高数据:${bytesToHex([height, weight])}`)
             dispatch('SendCmd', { cmd: Cmd.personalInfo, data: '02' + bytesToHex([height, weight]) });
         }
         else {
             l.w('身高体重跳过')
             //直接跳过
-            dispatch('taskQueueExec', { isSetSuccess: true })
+            dispatch('taskQueueExec', { QueueName: 'setPersonalInfo' })
         }
     },
     getFlashingWarningThreshold({ commit, state, dispatch, getters }, payload) {
@@ -416,7 +477,7 @@ const actions = {
         
         l.w(`设置提醒阀值执行ratemax:${ratemax},steptarget:${bytesToHex(steptarget)},sportTarget:${sportTarget},tempdiff:${tempdiff}`)
 
-        dispatch('SendCmd', { cmd: Cmd.FlashingWarningThreshold, data: '02' + bytesToHex([ratemax].concat(steptarget, [tempdiff])) });
+        dispatch('SendCmd', { cmd: Cmd.FlashingWarningThreshold, data: '02' + bytesToHex([ratemax,40].concat(steptarget, [tempdiff])) });
 
         // dispatch('taskQueueExec', { isSetSuccess: true })
         // if (rawDeviceSetHeartRateMax != heartRateCountRemind ||
@@ -456,7 +517,7 @@ const actions = {
     },
     getSleep({ commit, state, dispatch, getters }, payload) {
         var t_data = this;
-        console.log('读取睡眠时间')
+        // console.log('读取睡眠时间')
         commit('configSet', { IsReadHistoryData: true })
         if (typeof (window.sleepDataHandler) !== 'function') {
             (function () {
@@ -481,7 +542,7 @@ const actions = {
     },
     getSport({ commit, state, dispatch, getters }, payload) {
         var t_data = this;
-        l.i('读取历史运动数据')
+        // l.i('读取历史运动数据')
         //commit('configSet',{IsReadHistoryData: true})
         if (typeof (window.sportDataHandler) !== 'function') {
             //通用回复处理
@@ -506,7 +567,7 @@ const actions = {
     },
     getTempRHPress({ commit, state, dispatch, getters }, payload) {
         var t_data = this;
-        l.i('读取历史温湿度气压数据')
+        // l.i('读取历史温湿度气压数据')
         //commit('configSet',{IsReadHistoryData: true})
         if (typeof (window.tempRHPressDataHandler) !== 'function') {
             //通用回复处理
@@ -517,7 +578,7 @@ const actions = {
             })();
             window.tempRHPressDataHandler = new TempRHPressDataHandler(t_data);
         }
-        //发送请求帧
+        //发送请求帧 
         window.tempRHPressDataHandler.SendCount = 1;
         window.tempRHPressDataHandler.NeedReply = true;
         window.tempRHPressDataHandler.DataDomain = 0;
@@ -532,7 +593,7 @@ const actions = {
     },
     getHistoricalPulse({ commit, state, dispatch, getters }, payload) {
         var t_data = this;
-        l.i('读取历史脉搏数据')
+        // l.i('读取历史脉搏数据')
         //commit('configSet',{IsReadHistoryData: true})
         if (typeof (window.pulseDataHandler) !== 'function') {
             //通用回复处理
@@ -557,7 +618,7 @@ const actions = {
     },
     //更改设备信息
     changeDeviceInfo({ commit, state, dispatch, getters }, payload) {
-        l.w('changeDeviceInfo')
+        // l.w('changeDeviceInfo')
         state.taskQueue.push({
             //设置提醒阈值
             name: 'setFlashingWarningThreshold',
@@ -566,12 +627,42 @@ const actions = {
     },
     //更改体重身高
     changePersonalInfo({ commit, state, dispatch, getters }, payload) {
-        l.w('changePersonalInfo')
+        // l.w('changePersonalInfo')
         state.taskQueue.push({
             //设置个人信息(身高体重)
             name: 'setPersonalInfo',
             isExec: false
         })
+    },
+    getDynamicHeartRate({ commit, state, dispatch, getters }, payload){
+        let { taskQueue } = state
+
+        if(taskQueue[taskQueue.length-1].isExec===true){
+            commit('setDynamicHeartRate',{ status: 1 })
+            dispatch('SendCmd', { cmd: Cmd.dynamicHeartRate, data: '01' });
+        }else{
+            confirm({title: '数据同步中，请稍后...',msg:' '}).then((res)=>{
+                
+            })
+        }
+    },
+    closeDynamicHeartRate({ commit, state, dispatch, getters }, payload){
+        let { taskQueue, dynamicHeartRate } = state
+
+        if(dynamicHeartRate.heartRateTimer){
+            clearInterval(dynamicHeartRate.heartRateTimer)
+        }
+
+        setTimeout(()=>{
+            commit('setDynamicHeartRate',{ status: 3 })
+            dispatch('SendCmd', { cmd: Cmd.dynamicHeartRate, data: '03' });
+        }, 1000)
+
+    },
+    pushDynamicHeartRate({ commit, state, dispatch, getters }, payload){
+        let { taskQueue } = state
+        commit('setDynamicHeartRate',{ status: 2 })
+        dispatch('SendCmd', { cmd: Cmd.dynamicHeartRate, data: '02' });
     },
 }
 

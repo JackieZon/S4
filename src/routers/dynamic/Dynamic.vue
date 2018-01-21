@@ -3,20 +3,20 @@
         <div class="upper">
             <div class="startBtn">
                 <div class="item">
-                    <div class="btn">
-                        开始
+                    <div class="btn" @click="openDynamicHeartRate">
+                        {{dynamicHeartRateStatus==3?'开始':'关闭'}}
                     </div>
                 </div>
             </div>
             <div class="dynamicVal">
-                <div class="val">0</div>
+                <div class="val">{{heartRateList.length?heartRateList[heartRateList.length-1].hrCount:0}}</div>
                 <div class="label">次/分钟</div>
             </div>
         </div>
-        <div class="lower">
+        <div class="lower" v-if="veLineStatus">
             <ve-line :data="chartData" :settings="chartSettings" :extend="extend" :height="'6rem'"></ve-line>
         </div>
-        <div class="record" @click="openPages('DynamicRecord',{})">
+        <div class="record" @click="openRecord">
             <img src="./../../assets/images/record.png" alt="" srcset="">
         </div>
     </div>
@@ -25,73 +25,165 @@
 import VeLine from 'v-charts/lib/line'
 import { apiUrl } from "./../../utils/subei_config.js"
 import { Toast, Loading, Confirm } from 'vue-ydui/dist/lib.rem/dialog';
-import { mapState, mapActions } from 'vuex'
-import { getMemberInfo,simulationLogin,userInfoEdit } from "./../../sverse/api.js"
-import { success } from './../../utils/toast.js'
+import { mapState, mapActions, mapMutations } from 'vuex'
+import { getMemberInfo,simulationLogin,userInfoEdit, postSaveHeartRate } from "./../../sverse/api.js"
+import { success, toast } from './../../utils/toast.js'
     export default {
         components:{
             [VeLine.name]: VeLine
         },
         data () {
             return {
-
+                veLineStatus: true,
+                chartData: {
+                    columns: ['testTime', 'hrCount'],
+                    rows: [
+                        {
+                            testTime: '2018-01-01 00:00:00',
+                            hrCount: 90
+                        }
+                    ]
+                },
+                chartSettings: {
+                    labelMap: {
+                        hrCount: '心率'
+                    }
+                },
+                extend: {
+                    legend:{
+                        data:['']
+                    },
+                    yAxis:{
+                        min: 50
+                    },
+                    xAxis:{
+                        show: false
+                    }
+                }
             }
         },
         created(){
             console.log('组件初始化完成！')
-            this.chartData = {
-                columns: ['date', 'balance'],
-                rows: [
-                    { 'date': '1月2日 10:12', 'balance': 75 },
-                    { 'date': '1月2日 10:13', 'balance': 118 },
-                    { 'date': '1月2日 10:14', 'balance': 80 },
-                    { 'date': '1月2日 10:15', 'balance': 75 },
-                    { 'date': '1月2日 10:15', 'balance': 55 },
-                    { 'date': '1月2日 10:16', 'balance': 60 },
-                    { 'date': '1月2日 10:16', 'balance': 70 },
-                    { 'date': '1月2日 10:17', 'balance': 85 },
-                    { 'date': '1月2日 10:17', 'balance': 90 },
-                    { 'date': '1月2日 10:17', 'balance': 85 },
-                    { 'date': '1月2日 10:16', 'balance': 88 },
-                    { 'date': '1月2日 10:15', 'balance': 180 },
-                    { 'date': '1月2日 10:13', 'balance': 109 },
-                    { 'date': '1月2日 10:13', 'balance': 95 },
-                    { 'date': '1月2日 10:13', 'balance': 75 }
-                ]
-            }
-            this.chartSettings = {
-                labelMap: {
-                    balance: '心率'
-                }
-            }
-            this.extend = {
-                legend:{
-                    data:['']
-                },
-                yAxis:{
-                    min: 50
-                },
-                xAxis:{
-                    show: false
-                }
-            }
+        },
+        beforeDestroy(){
+            this.setDynamicHeartRate({ status: 3 })
+            this.closeDynamicHeartRate()
         },
         mounted () {
-    
+        },
+        watch:{
+            heartRateList(val,vals){
+                console.error(`观察心率列表数据的长度【${val.length}】`)
+                if(val.length){
+                    this.veLineStatus = false;
+                    this.chartData.rows = val;
+                    this.veLineStatus = true;
+                }
+            }
         },
         computed:{
-            ...mapState({})
+            ...mapState({
+                dynamicHeartRateStatus: state => {
+                    return state.main.dynamicHeartRate.status
+                },
+                heartRateList: state => {
+                    return state.main.dynamicHeartRate.heartRateList
+                },
+                deviceInfo: state => {
+                    return state.main.deviceInfo
+                },
+            })
         },
 
         methods: {
-             ...mapActions([
-                "userInfoSet",
-                'changePersonalInfo'
+            ...mapMutations([
+                'setDynamicHeartRate',
+                'clearHeartRateList'
             ]),
+            ...mapActions([
+                "userInfoSet",
+                'changePersonalInfo',
+                'getDynamicHeartRate',
+                'closeDynamicHeartRate',
+
+            ]),
+            openRecord(){
+                this.setDynamicHeartRate({ status: 3 })
+                this.openPages('DynamicRecord',{})
+            },
             openPages (name,param) {
                 param = (JSON.stringify(param) == "{}" ? {} : param);
                 this.$router.push({name: name, params: param});
             },
+            openDynamicHeartRate(){
+                if(this.dynamicHeartRateStatus==3){
+                    this.getDynamicHeartRate()
+                }else{
+                    this.postData();
+                    this.closeDynamicHeartRate()
+                }
+            },
+            postData(){
+
+                if(!this.heartRateList.length){
+                    return;
+                }
+
+                // [
+                //     {
+                //     "hrCount": 95,       //心率值，如果是动态心率，则该值为动态心率最高值
+                //     "deviceType": 0,   //设备类型 0:h1,1:G1,2:S3,3:S4
+                //     "type": 0,           //所处状态：0 静止、1动态,默认0
+                //     "measureType": 1,  //检测模式 1：手动 2：自动,3:未带手环,4：整点测量，5：动态心率
+                //     "surfaceTem": 37.5,//体表温度：摄氏度
+                //     "testTime": "2016-12-25 18:00:00", //测试时间：yyyy-MM-dd HH:mm:ss，如果为动态心率，则为开始时间
+                //     "wecDeviceId": "gh_c70e01bb5e4c_162c4d198b356f86"      //微信设备id必填项
+                //     "hrCountRecords": "[{\"testTime\": \"2016-12-2518: 00: 00\", \"hrCount": 60},{ \"testTime\": \"2016-12-2518: 00: 01\",  \"hrCount\": 60 }]",//每次动态心率详细数据
+                //     "minHeartRate": 60,//如果是动态心率，则为该动态心率的最小值
+                //     "avgHeartRate": 90//如果是动态心率，则为该动态心率的平均值
+                //     }
+                // ]
+
+                let allHrCount = []; //所有心率值
+                this.heartRateList.map((item, index)=>{
+                    allHrCount.push(item.hrCount)
+                })
+                allHrCount.sort();
+                let allHrCountLen = allHrCount.length;
+
+                let allHrCountPlus = allHrCount.reduce((x, y)=>{
+                    return x + y;
+                })
+                let avgHeartRate = (allHrCountPlus/allHrCountLen);
+
+                let param = [
+                    {
+                        hrCount: Number(allHrCount[allHrCountLen-1]),
+                        deviceType: 3,
+                        measureType: 5,
+                        surfaceTem: 28,
+                        testTime: this.heartRateList[0].testTime,
+                        wecDeviceId: this.deviceInfo.wecDeviceId,
+                        hrCountRecords: JSON.stringify(this.heartRateList),
+                        minHeartRate: Number(allHrCount[0]),
+                        avgHeartRate: Number(avgHeartRate)
+                    }
+                ]
+
+                console.error('****动态心率提交数据↓***')
+                console.error(param)
+
+                postSaveHeartRate(param).then((res) => {
+                    console.error(res)
+
+                    if (res.data.status) {
+                        toast({msg: '动态心率提交成功'})
+                    }
+
+                    console.error('执行清空心率数据')
+                    this.setDynamicHeartRate({ status: 3 })
+                })
+            }
         }
     }
 </script>

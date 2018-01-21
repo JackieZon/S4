@@ -14,7 +14,7 @@
                     </div>
                     <div class="user_device">
                         <div class="device_status">
-                            <p>{{ deviceInfo.DeviceName || 'S4_1234567'}}</p>
+                            <p>{{ deviceInfo.deviceName || '暂无'}}</p>
                         </div>
                     </div>
                 </div>

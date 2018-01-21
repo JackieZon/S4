@@ -24,7 +24,7 @@ export default {
 
   },
   mounted () {
-    // this.getMemberInfo();
+    this.getMemberInfo();
   },
   computed: {
       ...mapState({
@@ -36,13 +36,11 @@ export default {
   watch:{
       '$route' (to, from) {
         console.log(to)
-        // if(to.name==''){
-        //   $('title').html('hesvit')
-        // }
         if(to.name=='DeviceSet'){
           $('title').html('我的设备')
         }
         if(to.name=='Home'){
+          this.clearHeartRateList();
           $('title').html('健康记录')
         }
         if(to.name=='HealthHistory'){
@@ -71,7 +69,8 @@ export default {
       "deviceInfoSet"
     ]),
     ...mapMutations([
-      "deviceInfoSetingSet"
+      "deviceInfoSetingSet",
+      'clearHeartRateList'
     ]),
     /**
     *获取个人信息
@@ -114,6 +113,8 @@ export default {
             if(info.isOldBracelet){
               alert({msg: `该手环不支持蓝牙通讯功能！`})
             }
+            console.log(`成功获取设备信息`)
+            console.log(info)
             this.deviceInfoSet(info)
           }
 

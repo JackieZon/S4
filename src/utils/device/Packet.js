@@ -200,6 +200,10 @@ export let Cmd = {
     *  基础代谢
     **/
     basalMetabolism: 0x93,
+    /**
+    *  动态心率
+    **/
+    dynamicHeartRate: 0x80
 };
 
 /**
@@ -308,7 +312,7 @@ export function EncodePacket(cmd, hexstr, frameNum) {
     //指令字节
     var cmdBytes = [cmd];
 
-    //数据字节
+    //子命令字节
     var dataBytes = hexToBytes(hexstr);
 
     //数据长度字节
@@ -369,6 +373,18 @@ export function Packet(bytes) {
     var Cmdindex = PacketLenConfig.PacketStartLen + PacketLenConfig.DataLenLen + PacketLenConfig.FrameNumLen;
     this.Cmd = bytes.slice(Cmdindex, Cmdindex + PacketLenConfig.CmdLen)[0];
 
+    if(Cmd.dynamicHeartRate == this.Cmd){
+
+        this.Cmd = bytes.slice(Cmdindex, Cmdindex + PacketLenConfig.CmdLen)[0];
+        this.Cmdx = bytes.slice(Cmdindex, (Cmdindex + PacketLenConfig.CmdLen +1))[1]
+        console.log(`
+            现在是动态心率
+            主命令字节【 ${this.Cmd} 】
+            子命令字节【 ${this.Cmdx} 】
+        `)
+
+    }
+
     // 截取传输的数据的长度（ 总长度 - 本帧编号长度 - 命令长度 ）
     var Dataindex = Cmdindex + PacketLenConfig.CmdLen;
     this.Data = bytes.slice(Dataindex, Dataindex + this.DataLen - PacketLenConfig.FrameNumLen - PacketLenConfig.CmdLen);
@@ -398,54 +414,66 @@ export function Packet(bytes) {
                 case Cmd.LCDDisplayData:
                     {
                         l.i('Cmd.LCDDisplayData')
-                        if (!(typeof lcdDisplayDataHandler == "undefined"))
+                        if (!(typeof lcdDisplayDataHandler == "undefined")){
+                            this.QueueName = 'getLCDDisplayData'
                             lcdDisplayDataHandler.DecodePacket(this);
-                        else
+                        }else{
                             l.e('Cmd.LCDDisplayData')
+                        }
                         break;
                     }
                 case Cmd.sports:
                     {
                         l.i('Cmd.sports')
-                        if (!(typeof sportDataHandler == "undefined"))
+                        if (!(typeof sportDataHandler == "undefined")){
+                            this.QueueName = 'getSport'
                             sportDataHandler.DecodePacket(this);
-                        else
+                        }else{
                             l.e('Cmd.sports')
+                        }
                         break;
                     }
                 case Cmd.sleep:
                     {
                         l.i('Cmd.sleep')
-                        if (!(typeof sleepDataHandler == "undefined"))
+                        if (!(typeof sleepDataHandler == "undefined")){
+                            this.QueueName = 'getSleep'
                             sleepDataHandler.DecodePacket(this);
-                        else
+                        }else{
                             l.e('Cmd.sleep')
+                        }
                         break;
                     }
                 case Cmd.Temphumpres:
                     {
                         l.i('Cmd.Temphumpres')
-                        if (!(typeof tempRHPressDataHandler == "undefined"))
+                        console.error(`读取温湿度数据的全局函数【${typeof tempRHPressDataHandler}】`)
+                        if (!(typeof tempRHPressDataHandler == "undefined")){
+                            this.QueueName = 'getTempRHPress'
                             tempRHPressDataHandler.DecodePacket(this);
-                        else
+                        }else{
                             l.e('Cmd.Temphumpres')
+                        }
                         break;
                     }
                 case Cmd.historicalPulse:
                     {
                         l.i('Cmd.historicalPulse')
-                        if (!(typeof pulseDataHandler == "undefined"))
+                        if (!(typeof pulseDataHandler == "undefined")){
+                            this.QueueName = 'getHistoricalPulse'
                             pulseDataHandler.DecodePacket(this);
-                        else
+                        }else{
                             l.e('Cmd.historicalPulse')
+                        }
                         break;
                     }
                 default:
                     {
-                        if (!(typeof dataHandler == "undefined"))
+                        if (!(typeof dataHandler == "undefined")){
                             dataHandler.DecodePacket(this);
-                        else
+                        }else{
                             l.e('dataHandler')
+                        }
                         break;
                     }
             }

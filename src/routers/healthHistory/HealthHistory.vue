@@ -143,7 +143,7 @@
         },
 
         mounted() {
-            // this.getNowDate();
+            this.getNowDate();
         },
         computed: {
             ...mapState({
@@ -161,7 +161,7 @@
                     this.btnStatus = false;
                 }
 
-                // this.getHistoryData(newDate);
+                this.getHistoryData(newDate);
             }
         },
 

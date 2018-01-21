@@ -14,6 +14,10 @@ window.lastpacketObj = null;
 
 export const config = (store, $router) => {
     const { commit, dispatch, state } = store
+    
+    console.log('检查commit 是否存在 向下')
+    console.log(commit)
+
     let vm = store.state.main
     wx_configs(function () {
         l.i('进入微信配置方法')
@@ -60,12 +64,7 @@ export const config = (store, $router) => {
                 console.log(res.deviceInfos)
                 for (var i = 0; i < deviceNum; i++) {
                     if (res.deviceInfos[i].state === 'connected') {
-
                         //等于当前控制的设备则更新连接状态
-                        console.log(`vm.deviceInfo.wecDeviceId:${vm.deviceInfo.wecDeviceId}; res.deviceInfos[i].deviceId:${res.deviceInfos[i].deviceId}; 空或相等条件值：${vm.deviceInfo.wecDeviceId == '' || vm.deviceInfo.wecDeviceId == res.deviceInfos[i].deviceId}`)
-                        console.log('已连接的设备信息')
-                        console.log(res.deviceInfos[i])
-                        
                         if (vm.deviceInfo.wecDeviceId == '' || vm.deviceInfo.wecDeviceId == res.deviceInfos[i].deviceId)
                         {
                             window.localStorage.setItem('wecDeviceId', res.deviceInfos[i].deviceId)
@@ -192,13 +191,12 @@ export const config = (store, $router) => {
 
 //微信config（必须先执行它）
 export function wx_configs(callback) {
-    l.e('获取getJsApiSign前')
-    
+    l.e('执行微信配置 【 wx.config 】')
     axiosApi(`${apiUrl}server/getJsApiSign`, "get", {}).then((res)=>{
         
         let data = res.data
-        l.e('执行获取config配置')
-        l.e(data)
+        console.log('getJsApiSign返回数据')
+        console.log(data)
 
         if (data.status) {
             if (!data.status) {
