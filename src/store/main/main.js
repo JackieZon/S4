@@ -73,12 +73,12 @@ let state = {
         {
             //读取温湿度气压
             name: 'getTempRHPress',
-            isExec: false
+            isExec: true
         },
         {
             //读取历史脉搏数据
             name: 'getHistoricalPulse',
-            isExec: false
+            isExec: true
         },
     ],
     taskQueueIndex: 0,
@@ -168,7 +168,8 @@ let state = {
     },
     userInfo: { 
         openId: 'openId',
-        menstruationCycle: 28
+        menstruationCycle: 28,
+        menstruationDays: 5,
     },
     female:{
         maleStart: false,
@@ -323,6 +324,9 @@ const actions = {
                 for (let task = 0; task < taskQueue.length; task++){
                     if(taskQueue[task].name == QueueName){
                         commit('taskQueueSet', { index: task });
+                    }
+                    let taskLen = taskQueue.length;
+                    if((taskLen - 1) == task){
                         break QueueNameFor;
                     }
                 }
@@ -442,6 +446,21 @@ const actions = {
             //直接跳过
             dispatch('taskQueueExec', { QueueName: 'setPersonalInfo' })
         }
+    },
+    setHolidayReminder({ commit, state, dispatch, getters }, payload) {
+        let { remindonstate, cycle, nextremind } = state.deviceInfo
+        let command = `0${remindonstate}`
+        console.log(
+            `
+                设置前的参数【女性生理周期】
+                子命令: 【02】;
+                开关: 【${remindonstate}】;
+                周期：【${cycle}】;
+                天数：【${nextremind}】;
+            `
+        )
+        dispatch('SendCmd', { cmd: Cmd.holidayReminder, data: '02' + bytesToHex([remindonstate, cycle, nextremind]) });
+
     },
     getFlashingWarningThreshold({ commit, state, dispatch, getters }, payload) {
         dispatch('SendCmd', { cmd: Cmd.FlashingWarningThreshold, data: '01' });
@@ -631,6 +650,15 @@ const actions = {
         state.taskQueue.push({
             //设置个人信息(身高体重)
             name: 'setPersonalInfo',
+            isExec: false
+        })
+    },
+    //更改女性生理周期
+    changeHolidayReminder({ commit, state, dispatch, getters }, payload) {
+        console.error('已添加设置女性生理周期【添加命令】')
+        state.taskQueue.push({
+            //设置女性生理周期
+            name: 'setHolidayReminder',
             isExec: false
         })
     },

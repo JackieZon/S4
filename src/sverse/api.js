@@ -164,13 +164,15 @@ export const getHeartRateList = async (param) => {
 export const getHeartRateDelete = async (param) => {
     let userId = window.localStorage.userId;
     let { id } = param
-    return await axiosApi(`${apiUrl}dynamicHr/delete?id=${id}`, "get", param);
+    console.error('在Api文件里的ID')
+    console.error(param)
+    return await axiosApi(`${apiUrl}dynamicHr/delete?id=${id}`, "delete", {});
 }
 
 // http://test.hesvit.com/wx/dynamicHr/getDynamicHeartRateDetail
 
 /**
- * 删除心率数据列表
+ * 获取心率详情数据
  */
 export const getDynamicHeartRateDetail = async (param) => {
     let userId = window.localStorage.userId;

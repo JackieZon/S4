@@ -13,6 +13,30 @@ export default (url, type, param) => {
   }
   /* eslint-disable */
   switch (type) {
+    case 'delete':
+      const upDelete = new Promise((resolve, reject) => {
+        axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
+        axios.delete(url, param).then((res) => {
+          if (res.status >= 200 && res.status < 300) {
+            if (res.data.status) {
+              resolve({data: res.data})
+            } else {
+              resolve({data: res.data})
+              if (res.data.infocode === -3000 || res.data.infocode === '-3000' || res.data.infocode === '-1') {
+                goBack()
+              }
+            }
+          } else {
+            alert({msg: '请求出错！'});
+          }
+        }).catch((res) => {
+          alert({msg: '请求出错！'});
+          reject(res)
+        })
+
+      })
+      return upDelete
+      break
     case 'get':
       const getApi = new Promise((resolve, reject) => {
         axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';

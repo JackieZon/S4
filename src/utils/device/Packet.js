@@ -447,7 +447,6 @@ export function Packet(bytes) {
                 case Cmd.Temphumpres:
                     {
                         l.i('Cmd.Temphumpres')
-                        console.error(`读取温湿度数据的全局函数【${typeof tempRHPressDataHandler}】`)
                         if (!(typeof tempRHPressDataHandler == "undefined")){
                             this.QueueName = 'getTempRHPress'
                             tempRHPressDataHandler.DecodePacket(this);

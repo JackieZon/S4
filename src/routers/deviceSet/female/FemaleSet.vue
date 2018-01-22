@@ -2,25 +2,36 @@
     <div id="male">
         <div class="enter" v-if="showPage">
             <yd-cell-group>
-                <yd-cell-item>
-                    <span slot="left">经期开始</span>
-                    <span slot="right">
-                        <yd-switch v-model="female.maleStart"></yd-switch>
-                    </span>
+                <yd-cell-item arrow>
+                    <span slot="left">行经天数</span>
+                    <select slot="right" v-model="userInfos.menstruationDays">
+                        <option value="2">2天</option>
+                        <option value="3">3天</option>
+                        <option value="4">4天</option>
+                        <option value="5">5天</option>
+                        <option value="6">6天</option>
+                        <option value="7">7天</option>
+                    </select>
                 </yd-cell-item>
-                <yd-cell-item>
+                <!-- <yd-cell-item>
                     <span slot="left">经期结束</span>
                     <span slot="right">
                         <yd-switch v-model="female.maleEnd"></yd-switch>
                     </span>
-                </yd-cell-item>
+                </yd-cell-item> -->
                 <yd-cell-item arrow>
-                    <span slot="left">月经周期</span>
+                    <span slot="left">行经周期</span>
                     <select slot="right" v-model="userInfos.menstruationCycle">
+                        <option value="21">21天</option>
+                        <option value="22">22天</option>
+                        <option value="23">23天</option>
+                        <option value="24">24天</option>
                         <option value="25">25天</option>
                         <option value="26">26天</option>
                         <option value="27">27天</option>
                         <option value="28">28天</option>
+                        <option value="29">29天</option>
+                        <option value="30">30天</option>
                     </select>
                 </yd-cell-item>
             </yd-cell-group>
@@ -42,7 +53,8 @@ import { alert, toast } from './../../../utils/toast'
             return {
                 showPage: true,
                 postData:{
-                    menstruationCycle: 28
+                    menstruationDays: 5,
+                    menstruationCycle: 28,
                 }
             }
         },
@@ -56,9 +68,11 @@ import { alert, toast } from './../../../utils/toast'
                 console.log(val)
                 this.femaleSet({maleEnd: val})
             },
+            'userInfos.menstruationDays'(val, vals){
+                this.userInfoSet({menstruationDays: Number(val)})
+            },
             'userInfos.menstruationCycle'(val, vals){
-                console.log('行经周期：'+val)
-                this.userInfoSet({menstruationCycle: val})
+                this.userInfoSet({menstruationCycle: Number(val)})
             },
         },
         mounted () {

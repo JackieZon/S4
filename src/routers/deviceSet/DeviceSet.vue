@@ -36,14 +36,14 @@
                 </yd-cell-item> -->
         </yd-cell-group>
 
-        <yd-cell-group v-if="sex==0">
+        <yd-cell-group v-if="true">
             <yd-cell-item>
                 <span slot="left" class="setting-name">女性生理期</span>
                 <span slot="right">
-                    <yd-switch v-model="cycleFlag"></yd-switch>
+                    <yd-switch v-model="cycleFlag" @click.native="setCycleFlag"></yd-switch>
                 </span>
             </yd-cell-item>
-            <yd-cell-item arrow type="a" @click.native="openPages('Female',{})">
+            <yd-cell-item arrow type="a" @click.native="openPages('FemaleSet',{})">
                 <span slot="left">女性生理期设置</span>
             </yd-cell-item>
         </yd-cell-group>
@@ -56,7 +56,7 @@
     </div>
 </template>
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapActions, mapMutations } from 'vuex'
 import { deviceUnBind } from './../../sverse/api.js'
 import { Toast, Loading, Confirm } from 'vue-ydui/dist/lib.rem/dialog';
 import { success } from './../../utils/toast.js'
@@ -66,7 +66,8 @@ import { getStorage } from './../../utils/device/DataHandler.js'
             return {
                 userId: 0,
                 sex: 0,
-                deviceSetInfo: {}
+                deviceSetInfo: {},
+                cycleFlag: false,
             }
         },
         mounted () {
@@ -77,6 +78,12 @@ import { getStorage } from './../../utils/device/DataHandler.js'
 
         },
         methods:{
+            ...mapActions([
+                'changeHolidayReminder',
+            ]),
+            ...mapMutations([
+                'deviceInfoSet'
+            ]),
             openPages (name,param) {
                 if(!name) return
                 param = (JSON.stringify(param) == "{}" ? {} : param);
@@ -106,7 +113,11 @@ import { getStorage } from './../../utils/device/DataHandler.js'
                         }
                     ]
                 });
-            }
+            },
+            setCycleFlag(){
+                alert('点击执行一次')
+                this.changeHolidayReminder()
+            },
         },
         computed:{
             ...mapState({
@@ -115,6 +126,9 @@ import { getStorage } from './../../utils/device/DataHandler.js'
                 },
                 deviceInfoSeting: state => {
                     return state.main.deviceInfoSeting
+                },
+                userGetInfo: state => {
+                    return state.main.userInfo
                 }
             })
         },
@@ -122,6 +136,24 @@ import { getStorage } from './../../utils/device/DataHandler.js'
             deviceInfoSeting(val, vals){
                 console.error('设备信息')
                 console.error(val)
+            },
+            'deviceGetInfo.remindonstate'(val, vals){
+                if(val==1){
+                    this.cycleFlag = true;
+                }else if(val==2){
+                    this.cycleFlag = false;
+                }
+            },
+            cycleFlag(val, vals){
+                // cycle 【行经周期】
+                // nextremind 【行经天数】
+                if(val){
+                    // 打开
+                    this.deviceInfoSet({remindonstate: 1, cycle: this.userGetInfo.menstruationCycle, nextremind: this.userGetInfo.menstruationDays})
+                }else{
+                    // 关闭
+                    this.deviceInfoSet({remindonstate: 2, cycle: this.userGetInfo.menstruationCycle, nextremind: this.userGetInfo.menstruationDays})
+                }
             }
         }
     }

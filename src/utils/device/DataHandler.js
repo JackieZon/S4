@@ -188,17 +188,28 @@ export function DataHandler(cmd, framesize, t_data) {
                     {
                         if (packet.FrameNum.datadomain == 13) {
                             l.w('读取节日提醒成功 女性生理周期成功！')
-                            dispatch('taskQueueExec', { QueueName: 'getHolidayReminder' })
 
-                            var remindonstate = bytesToNumber(packet.Data.slice(0, 1));
-                            var cycle = bytesToNumber(packet.Data.slice(1, 2));
-                            var nextremind = bytesToNumber(packet.Data.slice(2, 3));
-
-                            dispatch('deviceInfoSet', { remindonstate: remindonstate, cycle: cycle, nextremind: nextremind })
-
-                            l.w(`开关显示${remindonstate}，周期${cycle}，下次提醒天数${nextremind}`)
+                            console.error(
+                                `女性生理周期命令返回的【数据长度】
+                                ${packet.Data.length}
+                                `
+                            )
+                            if(packet.Data.length==0){
+                                dispatch('taskQueueExec', { QueueName: 'setHolidayReminder' })
+                                toast({msg: '生理周期设置成功！'})
+                            }else{
+                                dispatch('taskQueueExec', { QueueName: 'getHolidayReminder' })
+    
+                                let remindonstate = bytesToNumber(packet.Data.slice(0, 1));
+                                let cycle = bytesToNumber(packet.Data.slice(1, 2));
+                                let nextremind = bytesToNumber(packet.Data.slice(2, 3));
+    
+                                dispatch('deviceInfoSet', { remindonstate: remindonstate, cycle: cycle, nextremind: nextremind })
+    
+                                l.w(`开关显示${remindonstate}，周期${cycle}，下次提醒天数${nextremind}`)
+                            }
                         } else {
-                            l.e({ msg: '读取节日提醒失败！' })
+                            console.error('读取 / 设置 节日提醒失败！')
                         }
                         break;
                     }

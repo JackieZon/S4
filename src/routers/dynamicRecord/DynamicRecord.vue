@@ -3,7 +3,7 @@
         <yd-accordion>
             <yd-accordion-item :ref="'accordion'+index" v-for="(item, index) in list" :title="index==0?'本月':(item.date.split('-')[1])+'月'" :key="index" @click.native="getRateList(item.date)">
                 
-                <RightStroke :stylesx="{height: '1.5rem'}" v-on:increment="delThat(items.id)" v-for="(items, index) in item.list" :key="`${index}s`">
+                <RightStroke :stylesx="{height: '1.5rem'}" v-for="(items, index) in item.list" v-on:increment="delThat(items.id,item.date)" :key="`${index}s`">
                     <div class="recordList" @click="openPages('DynamicInfo',{id: items.id})">
                         <div class="time">{{ items.testTime }}</div>
                         <div class="text">本次最高心率<span class="val">{{ items.hrCount }}</span>次分钟，点击查看详情。</div>
@@ -72,19 +72,21 @@ import { success, confirm, toast } from './../../utils/toast.js'
                 param = (JSON.stringify(param) == "{}" ? {} : param);
                 this.$router.push({name: name, params: param});
             },
-            delThat(id){
-
+            delThat(id, date){
                 confirm({title:' ', msg: '删除后，该记录将无法恢复，确定删除吗？'}).then((res)=>{
                     if(res){
                         
-                        
+                        console.error('删除前的ID')
+                        console.error(id)
                         getHeartRateDelete({id: id}).then((res)=>{
 
                             console.error('删除心率数据列表')
                             console.error(res)
 
                             if(res.data.status){
-                                success({msg: '删除成功！'})
+                                toast({msg: '删除成功！'})
+                                window.location.reload()
+                                this.getRateList(date);
                             }else{
                                 toast({msg: '删除失败！'})
                             }
