@@ -32,7 +32,7 @@ import { success } from './../../utils/toast.js'
         },
         data () {
             return {
-                comStatus: true,
+                comStatus: false,
                 chartData: {
                     columns: ['testTime', 'hrCount'],
                     rows: [
@@ -83,7 +83,9 @@ import { success } from './../../utils/toast.js'
                 getDynamicHeartRateDetail({id: id}).then((res)=>{
                     this.comStatus = false;
                     this.chartData.rows = JSON.parse(res.data.info.hrCountRecords)
-                    this.comStatus = true;
+                    setTimeout(()=>{
+                        this.comStatus = true;
+                    }, 800)
                 })
             }
         }

@@ -307,6 +307,149 @@ export function DataHandler(cmd, framesize, t_data) {
                         }
                         break;
                     }
+                case Cmd.alarmClock:
+                    {
+                        if (packet.FrameNum.datadomain == 13) {
+                            console.error('查询或设置闹钟成功！')
+
+                            console.error(
+                                `查询或设置闹钟【数据长度】
+                                ${packet.Data.length}
+                                `
+                            )
+
+                            if(packet.Data.length==0){
+                                toast({msg: '设置闹钟成功！'})
+                            }else{
+                                
+                                console.error(`在次发起查询闹钟`)
+                                dispatch('loopClockListInquire', {})
+    
+                                // {
+                                //     index: 1,
+                                //     status: true,
+                                //     repeatByte: [0,1,0,1,0,1,0,1],
+                                //     time: [11,40,0]
+                                // },
+
+                                function countRepeat(str){
+                                    if(str.length==8){
+                                        return str.split('')
+                                    }else{
+                                        let strArr = str.split('').reverse();
+                                        let strLen = str.length;
+                                        for(let i=0; i<8-strLen; i++){
+                                            strArr.push(0)
+                                        }
+                                        return strArr.reverse();
+                                    }
+                                }
+
+                                let statusStr = [true, false, null];
+                                let clockIndex = (bytesToNumber(packet.Data.slice(0, 1))-1);
+                                let colckStatus = bytesToNumber(packet.Data.slice(1, 2));
+                                let clockRepeatByte = bytesToNumber(packet.Data.slice(2, 3));
+                                let clockTime = [bytesToNumber(packet.Data.slice(3, 4)),bytesToNumber(packet.Data.slice(4, 5)),bytesToNumber(packet.Data.slice(5, 6))];
+
+                                let repeatByte = clockRepeatByte.toString(2)
+
+                                commit('changeClock', { 
+                                    index: clockIndex,
+                                    data: {
+                                        index: clockIndex+1,
+                                        status: statusStr[colckStatus-1],
+                                        repeatByte: countRepeat(repeatByte),
+                                        time: clockTime
+                                    }
+                                })
+    
+                            }
+                        } else {
+                            console.error('读取 / 设置 节日提醒失败！')
+                        }
+                        break;
+                    }
+                case Cmd.setCall:
+                    {
+                        if (packet.FrameNum.datadomain == 13) {
+                            toast({msg: '来电提醒设置成功！'})
+                        } else {
+                            console.error('来电提醒设置失败！')
+                        }
+                        break;
+                    }
+                case Cmd.setSedentary:
+                    {
+                        if (packet.FrameNum.datadomain == 13) {
+                            
+                            if(packet.Data.length==0){
+                                toast({msg: '久坐提醒设置成功！'})
+                            }else{
+
+                                function countRepeat(str){
+                                    if(str.length==8){
+                                        return str.split('')
+                                    }else{
+                                        let strArr = str.split('').reverse();
+                                        let strLen = str.length;
+                                        for(let i=0; i<8-strLen; i++){
+                                            strArr.push(0)
+                                        }
+                                        return strArr.reverse();
+                                    }
+                                }
+
+                                let callRepeatByte = (bytesToNumber(packet.Data.slice(0, 1)));
+                                let startTime = [bytesToNumber(packet.Data.slice(1, 2)), bytesToNumber(packet.Data.slice(2, 3))];
+                                let endTime = [bytesToNumber(packet.Data.slice(3, 4)),bytesToNumber(packet.Data.slice(4, 5))];
+
+                                let repeatByte = callRepeatByte.toString(2)
+
+                                commit('saveSedentary', {
+                                    repeatByte: countRepeat(repeatByte),
+                                    startTime: startTime,
+                                    endTime: endTime,
+                                })
+    
+                            }
+                        } else {
+                            console.error('久坐提醒设置失败！')
+                        }
+                        break;
+                    }
+                case Cmd.setShock:
+                    {
+                        if (packet.FrameNum.datadomain == 13) {
+                            
+                            if(packet.Data.length==0){
+                                toast({msg: '久坐提醒设置成功！'})
+                            }else{
+
+                                let data1 = (bytesToNumber(packet.Data.slice(0, 1)));
+                                let data2 = bytesToNumber(packet.Data.slice(1, 2));
+                                let data3 = bytesToNumber(packet.Data.slice(2, 3));
+
+                                let repeatByte = callRepeatByte.toString(2)
+                                console.error(
+                                    `
+                                        久坐提醒数据
+                                    `
+                                )
+                                console.error({
+                                    data1: data1,
+                                    data2: data2,
+                                    data3: data3,
+                                })
+                                commit('saveSedentary', {
+                                    status: Boolean(data2)
+                                })
+    
+                            }
+                        } else {
+                            console.error('久坐提醒设置失败！')
+                        }
+                        break;
+                    }
                 default: {
                     break;
                 }

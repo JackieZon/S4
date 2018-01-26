@@ -166,7 +166,7 @@ import { success, toast } from './../../utils/toast.js'
                         wecDeviceId: this.deviceInfo.wecDeviceId,
                         hrCountRecords: JSON.stringify(this.heartRateList),
                         minHeartRate: Number(allHrCount[0]),
-                        avgHeartRate: Number(avgHeartRate)
+                        avgHeartRate: Math.floor(avgHeartRate)
                     }
                 ]
 

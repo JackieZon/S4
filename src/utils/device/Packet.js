@@ -203,7 +203,23 @@ export let Cmd = {
     /**
     *  动态心率
     **/
-    dynamicHeartRate: 0x80
+    dynamicHeartRate: 0x80,
+    /**
+    *  闹钟提醒
+    **/
+    alarmClock: 0x98,
+    /**
+    *  来电提醒
+    **/
+    setCall: 0x97,
+    /**
+    *  久坐提醒
+    **/
+    setSedentary: 0x9A,
+    /**
+    *  震动提醒
+    **/
+    setShock:0x95,
 };
 
 /**

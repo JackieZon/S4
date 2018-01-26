@@ -16,6 +16,9 @@ const Male = resolve => require(['./routers/deviceSet/male/Male.vue'],resolve);
 const Female = resolve => require(['./routers/deviceSet/female/Female.vue'],resolve);
 const FemaleDetile = resolve => require(['./routers/deviceSet/female/FemaleDetile.vue'],resolve);
 const FemaleSet = resolve => require(['./routers/deviceSet/female/FemaleSet.vue'],resolve);
+const Clock = resolve => require(['./routers/clock/Clock.vue'],resolve);
+const AddClock = resolve => require(['./routers/clock/AddClock.vue'],resolve);
+const Sedentary = resolve => require(['./routers/sedentary/Sedentary.vue'],resolve);
 
 Vue.use(Router)
 
@@ -100,6 +103,21 @@ export default new Router({
       path: '/FemaleSet',
       name: 'FemaleSet',
       component: FemaleSet
-    }
+    },
+    {
+      path: '/Clock',
+      name: 'Clock',
+      component: Clock
+    },
+    {
+      path: '/AddClock',
+      name: 'AddClock',
+      component: AddClock
+    },
+    {
+      path: '/Sedentary',
+      name: 'Sedentary',
+      component: Sedentary
+    },
   ]
 })

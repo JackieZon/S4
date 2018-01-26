@@ -36,7 +36,7 @@
                 </yd-cell-item> -->
         </yd-cell-group>
 
-        <yd-cell-group v-if="true">
+        <yd-cell-group v-if="sex==0">
             <yd-cell-item>
                 <span slot="left" class="setting-name">女性生理期</span>
                 <span slot="right">
@@ -50,6 +50,21 @@
         <yd-cell-group v-if="sex==1">
             <yd-cell-item arrow type="a" @click.native="openPages('Male',{})">
                 <span slot="left">重要日期提醒</span>
+            </yd-cell-item>
+        </yd-cell-group>
+
+        <yd-cell-group>
+            <yd-cell-item arrow type="a" @click.native="openPages('Clock',{})">
+                <span slot="left">闹钟提醒</span>
+            </yd-cell-item>
+            <yd-cell-item>
+                <span slot="left" class="setting-name">来电提醒</span>
+                <span slot="right">
+                    <yd-switch v-model="setCall"></yd-switch>
+                </span>
+            </yd-cell-item>
+            <yd-cell-item arrow type="a" @click.native="openPages('Sedentary',{})">
+                <span slot="left">久坐提醒</span>
             </yd-cell-item>
         </yd-cell-group>
 
@@ -68,18 +83,28 @@ import { getStorage } from './../../utils/device/DataHandler.js'
                 sex: 0,
                 deviceSetInfo: {},
                 cycleFlag: false,
+                setCall: false,
             }
         },
         mounted () {
+
+            this.setCall = window.localStorage.setCall;
 
             this.userId = window.localStorage.userId;
             this.sex = Number(window.localStorage.sex);
             this.deviceSetInfo = {...this.deviceSetInfo, ...this.deviceGetInfo};
 
+            if(this.remindonstate == 1){
+                this.cycleFlag = true;
+            }else{
+                this.cycleFlag = false;
+            }
+
         },
         methods:{
             ...mapActions([
                 'changeHolidayReminder',
+                'setAddCall',
             ]),
             ...mapMutations([
                 'deviceInfoSet'
@@ -115,7 +140,6 @@ import { getStorage } from './../../utils/device/DataHandler.js'
                 });
             },
             setCycleFlag(){
-                alert('点击执行一次')
                 this.changeHolidayReminder()
             },
         },
@@ -123,6 +147,9 @@ import { getStorage } from './../../utils/device/DataHandler.js'
             ...mapState({
                 deviceGetInfo: state => {
                     return state.main.deviceInfo
+                },
+                remindonstate: state => {
+                    return state.main.deviceInfo.remindonstate;
                 },
                 deviceInfoSeting: state => {
                     return state.main.deviceInfoSeting
@@ -137,24 +164,22 @@ import { getStorage } from './../../utils/device/DataHandler.js'
                 console.error('设备信息')
                 console.error(val)
             },
-            'deviceGetInfo.remindonstate'(val, vals){
-                if(val==1){
-                    this.cycleFlag = true;
-                }else if(val==2){
-                    this.cycleFlag = false;
-                }
-            },
             cycleFlag(val, vals){
+                console.log(val)
                 // cycle 【行经周期】
                 // nextremind 【行经天数】
-                if(val){
+                if(val==true){
                     // 打开
                     this.deviceInfoSet({remindonstate: 1, cycle: this.userGetInfo.menstruationCycle, nextremind: this.userGetInfo.menstruationDays})
                 }else{
                     // 关闭
                     this.deviceInfoSet({remindonstate: 2, cycle: this.userGetInfo.menstruationCycle, nextremind: this.userGetInfo.menstruationDays})
                 }
-            }
+            },
+            setCall(val, vals){
+                window.localStorage.setCall = val;
+                this.setAddCall({status: val});
+            },
         }
     }
 </script>

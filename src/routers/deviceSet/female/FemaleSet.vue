@@ -3,15 +3,8 @@
         <div class="enter" v-if="showPage">
             <yd-cell-group>
                 <yd-cell-item arrow>
-                    <span slot="left">行经天数</span>
-                    <select slot="right" v-model="userInfos.menstruationDays">
-                        <option value="2">2天</option>
-                        <option value="3">3天</option>
-                        <option value="4">4天</option>
-                        <option value="5">5天</option>
-                        <option value="6">6天</option>
-                        <option value="7">7天</option>
-                    </select>
+                    <span slot="left">上次行经时间</span>
+                    <yd-datetime type="date" :start-date="startDate" :end-date="endDate" v-model="postData.lastMenstruationDate" slot="right"></yd-datetime>
                 </yd-cell-item>
                 <!-- <yd-cell-item>
                     <span slot="left">经期结束</span>
@@ -51,8 +44,11 @@ import { alert, toast } from './../../../utils/toast'
     export default {
         data () {
             return {
-                showPage: true,
+                startDate: '',
+                endDate: '',
+                showPage: false,
                 postData:{
+                    lastMenstruationDate: '2018-01-01',
                     menstruationDays: 5,
                     menstruationCycle: 28,
                 }
@@ -68,15 +64,60 @@ import { alert, toast } from './../../../utils/toast'
                 console.log(val)
                 this.femaleSet({maleEnd: val})
             },
-            'userInfos.menstruationDays'(val, vals){
-                this.userInfoSet({menstruationDays: Number(val)})
+            'postData.lastMenstruationDate'(val, vals){
+                console.log(val)
+
+                let menstruationCycle = Number(this.userInfos.menstruationCycle) // 月经周期
+
+                let nowDate = new Date() // 今天的日期
+                let year = Number(nowDate.getFullYear());
+                let month = Number(nowDate.getMonth()+1);
+                let date = Number(nowDate.getDate());
+
+                let selectYear = Number(val.slice(0,4)) // 选择的开始的月份
+                let selectMonth = Number(val.slice(5,7)) // 选择的开始的月份
+                let selectDay = Number(val.slice(8,10)) // 选择的开始的日期
+
+                let countDate = ''
+
+                if(selectMonth == (month) && year==selectYear){
+                    countDate = menstruationCycle - (date-selectDay)
+                }else{
+                    let lastDate = new Date(selectYear,selectMonth,0)
+                    let getDate = (lastDate.getDate()-selectDay);
+
+                    let nextDate = menstruationCycle - (getDate+date);
+                    countDate = (nextDate<0?(menstruationCycle+nextDate): nextDate)
+                }
+
+                console.log(`距离下一次天数【${countDate}】`)
+                this.userInfoSet({menstruationDays: Number(countDate)})
+
+                // let countMenstruation = (this.userInfos.menstruationCycle-selectDay)
+                // this.userInfoSet({menstruationDays: Number(val)})
+
+                this.userInfoSet({lastMenstruationDate: val})
             },
+            // 'userInfos.menstruationDays'(val, vals){
+            //     this.userInfoSet({menstruationDays: Number(val)})
+            // },
             'userInfos.menstruationCycle'(val, vals){
                 this.userInfoSet({menstruationCycle: Number(val)})
             },
         },
+        created(){
+        },
         mounted () {
-            this.postData = {...this.postData,...this.userGetInfo}
+            this.postData = {...this.postData,...this.userInfos}
+
+            // 设置时间段
+            let nowDates = new Date();
+            let year = Number(nowDates.getFullYear());
+            let month = Number(nowDates.getMonth()+1);
+            let date = Number(nowDates.getDate());
+            this.startDate = `${year-1}-01-01`;
+            this.endDate = `${year}-${(month<10?'0'+month:month)}-${ (date<10?'0'+date:date)}`;
+            this.showPage = true;
         },
         methods:{
             ...mapActions([

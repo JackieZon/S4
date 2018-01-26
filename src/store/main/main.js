@@ -61,6 +61,21 @@ let state = {
             isExec: false
         },
         {
+            //读取查询闹钟列表
+            name: 'loopClockListInquire',
+            isExec: false
+        },
+        {
+            //读取久坐提醒
+            name: 'readySedentary',
+            isExec: false
+        },
+        {
+            //读取久坐开关状态
+            name: 'readyShock',
+            isExec: false
+        },
+        {
             //读取运动历史
             name: 'getSport',
             isExec: false
@@ -73,12 +88,12 @@ let state = {
         {
             //读取温湿度气压
             name: 'getTempRHPress',
-            isExec: true
+            isExec: false
         },
         {
             //读取历史脉搏数据
             name: 'getHistoricalPulse',
-            isExec: true
+            isExec: false
         },
     ],
     taskQueueIndex: 0,
@@ -170,6 +185,7 @@ let state = {
         openId: 'openId',
         menstruationCycle: 28,
         menstruationDays: 5,
+        lastMenstruationDate: '2018-01-01',
     },
     female:{
         maleStart: false,
@@ -190,10 +206,104 @@ let state = {
         heartRateTimer: 0,
         status: 3,               // 1已打开 2同步中 3关闭 
         heartRateList: [],
+    },
+    clockList:[
+        {
+            index: 1,
+            status: null,
+            repeatByte: [0,0,0,0,0,0,0,0],
+            time: [0,0,0]
+        },
+        {
+            index: 2,
+            status: null,
+            repeatByte: [0,0,0,0,0,0,0,0],
+            time: [0,0,0]
+        },
+        {
+            index: 3,
+            status: null,
+            repeatByte: [0,0,0,0,0,0,0,0],
+            time: [0,0,0]
+        },
+        {
+            index: 4,
+            status: null,
+            repeatByte: [0,0,0,0,0,0,0,0],
+            time: [0,0,0]
+        },
+        {
+            index: 5,
+            status: null,
+            repeatByte: [0,0,0,0,0,0,0,0],
+            time: [0,0,0]
+        },
+        {
+            index: 6,
+            status: null,
+            repeatByte: [0,0,0,0,0,0,0,0],
+            time: [0,0,0]
+        },
+        {
+            index: 7,
+            status: null,
+            repeatByte: [0,0,0,0,0,0,0,0],
+            time: [0,0,0]
+        },
+        {
+            index: 8,
+            status: null,
+            repeatByte: [0,0,0,0,0,0,0,0],
+            time: [0,0,0]
+        },
+        {
+            index: 9,
+            status: null,
+            repeatByte: [0,0,0,0,0,0,0,0],
+            time: [0,0,0]
+        },
+        {
+            index: 10,
+            status: null,
+            repeatByte: [0,0,0,0,0,0,0,0],
+            time: [0,0,0]
+        },
+    ],
+    clockListIndex: 1,
+    sedentaryData:{
+        status: false,
+        repeatByte: [0,0,0,0,0,0,0,0],
+        startTime: [],
+        endTime: [],
     }
 }
 
 const mutations = {
+    
+    saveSedentary(state, payload){
+        // {
+        //     repeatByte: countRepeat(repeatByte),
+        //     startTime: startTime,
+        //     endTime: endTime,
+        // }
+        console.log(`久坐提醒保存到 store 中`)
+        console.log(payload)
+        state.sedentaryData = { ...state.sedentaryData, ...payload }
+    },
+    
+    changeClock(state, payload){
+        console.error(`在store.js中得到查询的闹钟【↓】`)
+        console.error(payload)
+        const { index, data } = payload;
+        state.clockList[index] = data;
+        if(index==9){
+            console.error('已查询完成');
+            console.error(state.clockList);
+        }
+    },
+    saveClockListIndex(state, payload){
+        state.clockListIndex = payload;
+    },
     pushHeartRateList(state, payload){
         
         console.error(`保存到store中,【${payload.hrCount}】`)
@@ -314,12 +424,12 @@ const actions = {
         let { QueueName } = payload
 
         // 改变执行完的任务状态
-        console.warn('执行改变任务状态方法前');
-        console.warn(`QueueName:【${QueueName}】`);
-        console.warn(`QueueName typeOf:【${typeof QueueName}】`);
+        // console.warn('执行改变任务状态方法前');
+        // console.warn(`QueueName:【${QueueName}】`);
+        // console.warn(`QueueName typeOf:【${typeof QueueName}】`);
 
         if(QueueName){
-            console.warn(`接收到同步完成标记的任务【${QueueName}】`);
+            // console.warn(`接收到同步完成标记的任务【${QueueName}】`);
             QueueNameFor:
                 for (let task = 0; task < taskQueue.length; task++){
                     if(taskQueue[task].name == QueueName){
@@ -336,10 +446,10 @@ const actions = {
         QueueLoop:
             for (let i = 0; i < taskQueue.length; i++){
 
-                console.warn(`执行【${taskQueue[i].name}】状态是${taskQueue[i].isExec}`)
+                // console.warn(`执行【${taskQueue[i].name}】状态是${taskQueue[i].isExec}`)
 
                 if(taskQueue[i].isExec === false){
-                    console.warn(`状态通过，立即执行【${ taskQueue[i].name }】`)
+                    // console.warn(`状态通过，立即执行【${ taskQueue[i].name }】`)
                     dispatch(taskQueue[i].name)
                     break QueueLoop;
                 }
@@ -430,6 +540,32 @@ const actions = {
     },
     getPersonalInfo({ commit, state, dispatch, getters }, payload) {
         dispatch('SendCmd', { cmd: Cmd.personalInfo, data: '01' });
+    },
+    openCall({ commit, state, dispatch, getters }, payload) {
+        dispatch('SendCmd', { cmd: Cmd.setCall, data: '01' });
+    },
+    closeCall({ commit, state, dispatch, getters }, payload) {
+        dispatch('SendCmd', { cmd: Cmd.setCall, data: '02' });
+    },
+    // 查询来电提醒【久坐信息】
+    readySedentary({ commit, state, dispatch, getters }, payload) {
+        dispatch('SendCmd', { cmd: Cmd.setSedentary, data: '02' });
+    },
+    // 查询久坐提醒 【开关】
+    readyShock({ commit, state, dispatch, getters }, payload) {
+        dispatch('SendCmd', { cmd: Cmd.setShock, data: '01' });
+    },
+    // 设置久坐提醒 【开关】
+    setyShock({ commit, state, dispatch, getters }, payload) {
+        let { status } = state.sedentaryData;
+
+        console.error(
+            `
+                设置久坐提醒开关
+                ${status}
+            `
+        )
+        dispatch('SendCmd', { cmd: Cmd.setShock, data: '02' + bytesToHex([0, (status?1:0), 0]) });
     },
     setPersonalInfo({ commit, state, dispatch, getters }, payload) {
         //是否需要设置身高体重
@@ -662,6 +798,41 @@ const actions = {
             isExec: false
         })
     },
+    //设置来电提醒
+    setAddCall({ commit, state, dispatch, getters }, payload) {
+        let { status } = payload;
+        if(status){
+            console.error('打开来电提醒')
+            state.taskQueue.push({
+                //设置来电提醒
+                name: 'openCall',
+                isExec: false
+            })
+        }else{
+            console.error('关闭来电提醒')
+            state.taskQueue.push({
+                //设置来电提醒
+                name: 'closeCall',
+                isExec: false
+            })
+        }
+    },
+    addSetSedentary({ commit, state, dispatch, getters }, payload) {
+        console.error('添加设置久坐【设置】')
+        state.taskQueue.push({
+            //设置来电提醒
+            name: 'setSedentary',
+            isExec: false
+        })
+    },
+    addSetyShock({ commit, state, dispatch, getters }, payload) {
+        console.error('添加设置久坐【开关】')
+        state.taskQueue.push({
+            //设置来电提醒
+            name: 'setyShock',
+            isExec: false
+        })
+    },
     getDynamicHeartRate({ commit, state, dispatch, getters }, payload){
         let { taskQueue } = state
 
@@ -691,6 +862,148 @@ const actions = {
         let { taskQueue } = state
         commit('setDynamicHeartRate',{ status: 2 })
         dispatch('SendCmd', { cmd: Cmd.dynamicHeartRate, data: '02' });
+    },
+    loopClockListInquire({ commit, state, dispatch, getters }, payload){
+
+        let clockListIndex = state.clockListIndex
+        console.error(
+            `
+                查询中请稍后...
+                当前查询闹钟的序号：【${clockListIndex}】
+            `
+        )
+        if(clockListIndex<11){
+            dispatch('SendCmd', { cmd: Cmd.alarmClock, data: '02' + bytesToHex([clockListIndex]) });
+            commit('saveClockListIndex', clockListIndex+=1)
+        }else{
+            console.error(`查询完毕序号为：【${clockListIndex}】`)
+            dispatch( 'taskQueueExec',{QueueName: 'loopClockListInquire'})
+        }
+        
+    },
+    addClock({ commit, state, dispatch, getters }, payload){
+
+        // {
+        //     index: 1,
+        //     status: true,
+        //     repeatByte: [0,1,0,1,0,1,0,1],
+        //     time: [11,40,0]
+        // },
+
+        // postData: {
+        //     time: [0,0,0],
+        //     repeatByte: [0,0,0,0,0,0,0,0]
+        // },
+
+        const { index, time, repeatByte, status } = payload;
+
+        let clockList = state.clockList
+        // 循环闹钟列表设置为设置的闹钟;
+        if(Number(index)=='number'){
+            
+            let indexs = index-1;
+            console.error(`关闭或删除的数组序列号【${indexs}】闹钟列号【${index}】`)
+            // 改变列表上的数据
+            commit('changeClock',{
+                index: indexs,
+                data:{
+                    index: index,
+                    status: status,
+                    repeatByte: repeatByte,
+                    time: time
+                }
+            })
+            // 发起设置手环命令
+            dispatch('setClock',{
+                index: index,
+                status: status,
+                repeatByte: repeatByte,
+                time: time
+            })
+        }else{
+            
+            ClockFor:
+                for (let i = 0; i < clockList.length; i++){
+                    let indexs = i;
+                    if(clockList[i].status == null){
+
+                        // 改变列表上的数据
+                        commit('changeClock',{
+                            index: i,
+                            data:{
+                                index: (indexs+1),
+                                status: status,
+                                repeatByte: repeatByte,
+                                time: time
+                            } 
+                        })
+                        // 发起设置手环命令
+                        dispatch('setClock',{
+                            index: (indexs+1),
+                            status: status,
+                            repeatByte: repeatByte,
+                            time: time
+                        })
+                        break ClockFor;
+                        
+                    }
+
+                    // let taskLen = taskQueue.length;
+
+                    // if((taskLen - 1) == task){
+                        
+                    // }
+                }
+
+        }
+    },
+    setClock({ commit, state, dispatch, getters }, payload){
+        
+        let statusType = [true,false,null]
+
+        const {
+            index,
+            status,
+            repeatByte,
+            time,
+        } = payload
+        console.log(
+            `
+                设置的手环
+                闹钟序号【${index}】
+                闹钟状态【${(statusType.indexOf(status)+1)}】
+                闹钟重复【${Number(`0b${repeatByte.join('')}`)}】
+                时【${time[0]}】
+                分【${time[1]}】
+                秒【${time[2]}】
+            `
+        )
+        dispatch('SendCmd', { cmd: Cmd.alarmClock, data: '01' + bytesToHex([index, (statusType.indexOf(status)+1), Number(`0b${repeatByte.join('')}`), time[0], time[1], time[2] ]) });
+    },
+    delClock({ commit, state, dispatch, getters }, payload){
+
+    },
+    //设置久坐提醒
+    setSedentary({ commit, state, dispatch, getters }, payload) {
+        let { 
+            repeatByte,
+            startTime,
+            endTime,
+        } = state;
+
+        console.log(
+            `
+                设置久坐提醒
+                闹钟重复【${Number(`0b${repeatByte.join('')}`)}】
+                开始时【${startTime[0]}】
+                开始分【${startTime[1]}】
+                结束时【${endTime[0]}】
+                结束分【${endTime[1]}】
+            `
+        )
+
+        dispatch('SendCmd', { cmd: Cmd.setSedentary, data: '01' + bytesToHex([ Number(`0b${repeatByte.join('')}`), startTime[0], startTime[1], endTime[0], endTime[1] ]) });
+    
     },
 }
 
