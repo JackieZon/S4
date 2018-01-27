@@ -18,26 +18,26 @@
   <script src="./static/js/jquery.js"></script>
   <script src="./static/js/vconsole.min.js"></script>
   <script>
-      // function getUrlParam(name) {
-      //     // 构造一个含有目标参数的正则表达式对象、匹配目标参数
-      //     var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)');
-      //     var param = window.location.search.substr(1).match(reg);
+      function getUrlParam(name) {
+          // 构造一个含有目标参数的正则表达式对象、匹配目标参数
+          var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)');
+          var param = window.location.search.substr(1).match(reg);
 
-      //     // 返回参数值
-      //     if (param !== null) {
-      //         return decodeURIComponent(param[2]);
-      //     } else {
-      //         return null;
-      //     }
-      // }
+          // 返回参数值
+          if (param !== null) {
+              return decodeURIComponent(param[2]);
+          } else {
+              return null;
+          }
+      }
 
-      // (function(){
-      //   var route =getUrlParam('route');
-      //   window.localStorage.setItem('route',route)
-      //   if(route){
-      //     location.href = '#/'+ route;
-      //   }
-      // })()
+      (function(){
+        var route =getUrlParam('route');
+        window.localStorage.setItem('route',route)
+        if(route){
+          location.href = '#/'+ route;
+        }
+      })()
       
   </script>
 </head>

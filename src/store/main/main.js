@@ -275,11 +275,21 @@ let state = {
         repeatByte: [0,0,0,0,0,0,0,0],
         startTime: [],
         endTime: [],
-    }
+    },
+    setCallNum: '01'
 }
 
 const mutations = {
-    
+    saveSetCallNum(state, payload){
+        console.error(
+            `
+                设置电话提醒
+                ==${payload}==
+            `
+        )
+
+        state.setCallNum = payload;
+    },
     saveSedentary(state, payload){
         // {
         //     repeatByte: countRepeat(repeatByte),
@@ -424,12 +434,12 @@ const actions = {
         let { QueueName } = payload
 
         // 改变执行完的任务状态
-        // console.warn('执行改变任务状态方法前');
-        // console.warn(`QueueName:【${QueueName}】`);
-        // console.warn(`QueueName typeOf:【${typeof QueueName}】`);
+        console.warn('执行改变任务状态方法前');
+        console.warn(`QueueName:【${QueueName}】`);
+        console.warn(`QueueName typeOf:【${typeof QueueName}】`);
 
         if(QueueName){
-            // console.warn(`接收到同步完成标记的任务【${QueueName}】`);
+            console.warn(`接收到同步完成标记的任务【${QueueName}】`);
             QueueNameFor:
                 for (let task = 0; task < taskQueue.length; task++){
                     if(taskQueue[task].name == QueueName){
@@ -446,10 +456,10 @@ const actions = {
         QueueLoop:
             for (let i = 0; i < taskQueue.length; i++){
 
-                // console.warn(`执行【${taskQueue[i].name}】状态是${taskQueue[i].isExec}`)
+                console.warn(`执行【${taskQueue[i].name}】状态是${taskQueue[i].isExec}`)
 
                 if(taskQueue[i].isExec === false){
-                    // console.warn(`状态通过，立即执行【${ taskQueue[i].name }】`)
+                    console.warn(`状态通过，立即执行【${ taskQueue[i].name }】`)
                     dispatch(taskQueue[i].name)
                     break QueueLoop;
                 }
@@ -541,13 +551,13 @@ const actions = {
     getPersonalInfo({ commit, state, dispatch, getters }, payload) {
         dispatch('SendCmd', { cmd: Cmd.personalInfo, data: '01' });
     },
-    openCall({ commit, state, dispatch, getters }, payload) {
-        dispatch('SendCmd', { cmd: Cmd.setCall, data: '01' });
+
+    setCall({ commit, state, dispatch, getters }, payload) {
+        let num = state.setCallNum;
+        dispatch('SendCmd', { cmd: Cmd.setCall, data: num });
     },
-    closeCall({ commit, state, dispatch, getters }, payload) {
-        dispatch('SendCmd', { cmd: Cmd.setCall, data: '02' });
-    },
-    // 查询来电提醒【久坐信息】
+
+    // 查询久坐提醒【久坐信息】
     readySedentary({ commit, state, dispatch, getters }, payload) {
         dispatch('SendCmd', { cmd: Cmd.setSedentary, data: '02' });
     },
@@ -802,17 +812,19 @@ const actions = {
     setAddCall({ commit, state, dispatch, getters }, payload) {
         let { status } = payload;
         if(status){
+            commit('saveSetCallNum','01')
             console.error('打开来电提醒')
             state.taskQueue.push({
                 //设置来电提醒
-                name: 'openCall',
+                name: 'setCall',
                 isExec: false
             })
         }else{
+            commit('saveSetCallNum','02')
             console.error('关闭来电提醒')
             state.taskQueue.push({
                 //设置来电提醒
-                name: 'closeCall',
+                name: 'setCall',
                 isExec: false
             })
         }

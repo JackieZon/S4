@@ -372,6 +372,7 @@ export function DataHandler(cmd, framesize, t_data) {
                 case Cmd.setCall:
                     {
                         if (packet.FrameNum.datadomain == 13) {
+                            dispatch('taskQueueExec', { QueueName: 'setCall' })
                             toast({msg: '来电提醒设置成功！'})
                         } else {
                             console.error('来电提醒设置失败！')
@@ -383,7 +384,10 @@ export function DataHandler(cmd, framesize, t_data) {
                         if (packet.FrameNum.datadomain == 13) {
                             
                             if(packet.Data.length==0){
+
                                 toast({msg: '久坐提醒设置成功！'})
+                                dispatch('taskQueueExec', { QueueName: 'setSedentary' })
+
                             }else{
 
                                 function countRepeat(str){
@@ -402,9 +406,10 @@ export function DataHandler(cmd, framesize, t_data) {
                                 let callRepeatByte = (bytesToNumber(packet.Data.slice(0, 1)));
                                 let startTime = [bytesToNumber(packet.Data.slice(1, 2)), bytesToNumber(packet.Data.slice(2, 3))];
                                 let endTime = [bytesToNumber(packet.Data.slice(3, 4)),bytesToNumber(packet.Data.slice(4, 5))];
-
                                 let repeatByte = callRepeatByte.toString(2)
-
+                                
+                                dispatch('taskQueueExec', { QueueName: 'readySedentary' })
+                                
                                 commit('saveSedentary', {
                                     repeatByte: countRepeat(repeatByte),
                                     startTime: startTime,
@@ -423,16 +428,16 @@ export function DataHandler(cmd, framesize, t_data) {
                             
                             if(packet.Data.length==0){
                                 toast({msg: '久坐提醒设置成功！'})
+                                dispatch('taskQueueExec', { QueueName: 'setyShock' })
                             }else{
 
                                 let data1 = (bytesToNumber(packet.Data.slice(0, 1)));
                                 let data2 = bytesToNumber(packet.Data.slice(1, 2));
                                 let data3 = bytesToNumber(packet.Data.slice(2, 3));
 
-                                let repeatByte = callRepeatByte.toString(2)
                                 console.error(
                                     `
-                                        久坐提醒数据
+                                        久坐提醒数据 [开关]
                                     `
                                 )
                                 console.error({
@@ -440,6 +445,9 @@ export function DataHandler(cmd, framesize, t_data) {
                                     data2: data2,
                                     data3: data3,
                                 })
+                                
+                                dispatch('taskQueueExec', { QueueName: 'readyShock' })
+                                
                                 commit('saveSedentary', {
                                     status: Boolean(data2)
                                 })
