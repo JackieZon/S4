@@ -1,20 +1,21 @@
 <template>
     <div id="clock">
-        
-        <RightStroke :stylesx="{height: '1.45rem'}" v-for="(item, index) in clockList" v-if="typeof(item.status)=='boolean'" v-on:increment="delClock(item)" :key="`${index}s`">
-            <div class="recordList">
-                <div class="clockContent" @click="openPages('DynamicInfo',{index: item.index})">
-                    <div class="time">{{ countTime(item.time) }}</div>
-                    <div class="text">{{ countDay(item.repeatByte) }}</div>
+        <div class="clockList" v-if="listStatus">
+            <RightStroke :stylesx="{height: '1.45rem'}" v-for="(item, index) in clockList" v-if="typeof(item.status)=='boolean'" v-on:increment="delClock(item)" :key="`${index}s`">
+                <div class="recordList">
+                    <div class="clockContent" @click="openPages('DynamicInfo',{index: item.index})">
+                        <div class="time">{{ countTime(item.time) }}</div>
+                        <div class="text">{{ countDay(item.repeatByte) }}</div>
+                    </div>
+                    <div class="right">
+                        <yd-switch v-model="item.status" @click="closeClock(item)"></yd-switch>
+                    </div>
                 </div>
-                <div class="right">
-                    <yd-switch v-model="item.status" @click="closeClock(item)"></yd-switch>
-                </div>
-            </div>
-        </RightStroke>
+            </RightStroke>
+        </div>
         
         <div class="isOk" v-if="clockStatus">
-            <div class="btn" @click="addClock">添加</div>
+            <div class="btn" @click="openClockPage">添加</div>
         </div>
     </div>
 </template>
@@ -39,6 +40,7 @@ import { success, confirm, toast } from './../../utils/toast.js'
                 day: [' ','周六','周五','周四','周三','周二','周一','周日',],
                 chooseDay: '',
                 cycleFlag: true,
+                listStatus: true,
             }
         },
         created(){
@@ -57,6 +59,7 @@ import { success, confirm, toast } from './../../utils/toast.js'
         computed:{
             ...mapState({
                 clockList: state => {
+                    console.log(state.main.clockList)
                     return state.main.clockList
                 },
                 clockStatus: state => {
@@ -71,7 +74,11 @@ import { success, confirm, toast } from './../../utils/toast.js'
                 }
             })
         },
-
+        watch:{
+            clockList(val, vals){
+                console.log(val)
+            }
+        },
         methods: {
              ...mapActions([
                 "userInfoSet",
@@ -85,9 +92,10 @@ import { success, confirm, toast } from './../../utils/toast.js'
 
                 confirm({title:' ', msg: '删除后，该记录将无法恢复，确定删除吗？'}).then((res)=>{
                     if(res){
-                        
+                        this.listStatus = false
                         this.addClock({index: index, status: null, repeatByte: [0,0,0,0,0,0,0,0], time: [0,0,0]})
                         toast({msg: '删除成功！'})
+                        this.listStatus = true
 
                     }else{
                         console.log('取消！')
@@ -119,56 +127,10 @@ import { success, confirm, toast } from './../../utils/toast.js'
                 param = (JSON.stringify(param) == "{}" ? {} : param);
                 this.$router.push({name: name, params: param});
             },
-            delThat(id, date){
-                confirm({title:' ', msg: '删除后，该记录将无法恢复，确定删除吗？'}).then((res)=>{
-                    if(res){
-                        
-                        console.error('删除前的ID')
-                        console.error(id)
-                        getHeartRateDelete({id: id}).then((res)=>{
-
-                            console.error('删除心率数据列表')
-                            console.error(res)
-
-                            if(res.data.status){
-                                toast({msg: '删除成功！'})
-                                this.htmlStatus = false;
-                                this.getRateList(date);
-
-                            }else{
-                                toast({msg: '删除失败！'})
-                            }
-
-                        })
-
-                        console.log('删除成功！')
-                    }else{
-                        console.log('取消！')
-                    }
-                })
-
-            },
-            getRateList(date){
-                
-
-                getHeartRateList({date: date}).then((res)=>{
-
-                    console.error('获取心率数据列表')
-                    console.error(res)
-
-                    if(date==this.list[0].date){
-                        this.list[0].list = res.data.info
-                    }else if(date==this.list[1].date){
-                        this.list[1].list = res.data.info
-                    }
-
-                    this.htmlStatus = true;
-                })
-            },
             open(name) {
 
             },
-            addClock(){
+            openClockPage(){
                 this.openPages('AddClock',{})
             }
         }

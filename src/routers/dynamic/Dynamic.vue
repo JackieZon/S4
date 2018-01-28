@@ -179,8 +179,10 @@ import { success, toast } from './../../utils/toast.js'
                     if (res.data.status) {
                         toast({msg: '动态心率提交成功'})
                     }
-
-                    this.$router.push({name: 'DynamicInfo', params: {id: res.data.info.heartRateId}});
+                    
+                    setTimeout(()=>{
+                        this.$router.push({name: 'DynamicInfo', params: {id: res.data.info.heartRateId}});
+                    }, 2000)
 
                     console.error('执行清空心率数据')
                     this.setDynamicHeartRate({ status: 3 })

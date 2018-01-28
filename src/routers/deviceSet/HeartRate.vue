@@ -33,6 +33,7 @@
 <script>
 import { mapActions, mapState, mapMutations } from 'vuex'
 import { setDeciceSetInfo } from "./../../sverse/api.js"
+import { toast } from '../../utils/toast';
 export default {
   data(){
     return {
@@ -66,6 +67,9 @@ export default {
       deviceGetInfo: state => {
         return state.main.deviceInfo
       },
+      deviceConnectState: state =>{
+        return state.main.deviceInfo.connectState
+      },
       deviceInfoSeting: state => {
         return state.main.deviceInfoSeting
       }
@@ -91,24 +95,31 @@ export default {
         this.changeDeviceInfo()
       })
 
-    }
+    },
   },
   watch: {
     'heartRateRemind':{
         handler:function (val,oldVal) {
           this.postData.heartRateRemind = (val?1:0)
-          this.setDeciceSetInfo();
+          if(this.deviceConnectState){
+            this.setDeciceSetInfo();
+          }else{
+            toast({msg: '手环已断开连接，请稍后再试！'})
+          }
         },
         deep:true
     },
     'postData.heartRateCountRemind':{
       handler:function (val,oldVal) {
-        this.setDeciceSetInfo();
+        if(this.deviceConnectState){
+          this.setDeciceSetInfo();
+        }else{
+          toast({msg: '手环已断开连接，请稍后再试！'})
+        }
       },
       deep:true
     },
   }
-  
 }
 </script>
 <style lang="less" scoped>

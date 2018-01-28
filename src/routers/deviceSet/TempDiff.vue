@@ -35,6 +35,7 @@
 import { mapActions, mapState, mapMutations } from 'vuex'
 import { setDeciceSetInfo } from "./../../sverse/api.js"
 import {Spinner} from 'vue-ydui/dist/lib.rem/spinner';
+import { toast } from '../../utils/toast';
 export default {
   components:{
     Spinner
@@ -62,7 +63,10 @@ export default {
       },
       deviceInfoSeting: state => {
         return state.main.deviceInfoSeting
-      }
+      },
+      deviceConnectState: state =>{
+          return state.main.deviceInfo.connectState
+      },
     })
   },
   mounted () {
@@ -84,6 +88,7 @@ export default {
     ]),
     setDeciceSetInfo () {
       setDeciceSetInfo(this.postData).then((res)=>{
+        toast({msg: '设置成功！'})
         this.deviceInfoSetingSet(this.postData);
         this.deviceInfoSet(this.postData)
         l.w('HeartRate.destroyed')
@@ -94,12 +99,26 @@ export default {
   },
   watch: {
     temperatureDifferenceRemind (val,vals) {
-      this.postData.temperatureDifferenceRemind = (val?1:0)
-      this.setDeciceSetInfo();
+      this.postData.temperatureDifferenceRemind = (val?1:0);
+      
+        if(this.deviceConnectState){
+
+            this.setDeciceSetInfo()
+
+        }else{
+            toast({msg: '手环已断开连接，请稍后再试！'})
+        }
+
     },
     'postData.temperatureDifferenceValue':{
         handler:function (val,oldVal) {
-          this.setDeciceSetInfo();
+           
+          if(this.deviceConnectState){
+              this.setDeciceSetInfo()
+          }else{
+              toast({msg: '手环已断开连接，请稍后再试！'})
+          }
+
         },
         deep:true
     }

@@ -60,7 +60,7 @@
             <yd-cell-item>
                 <span slot="left" class="setting-name">来电提醒</span>
                 <span slot="right">
-                    <yd-switch v-model="setCall"></yd-switch>
+                    <yd-switch v-model="setCall" @click.native="carriedSetCall"></yd-switch>
                 </span>
             </yd-cell-item>
             <yd-cell-item arrow type="a" @click.native="openPages('Sedentary',{})">
@@ -74,7 +74,7 @@
 import { mapState, mapActions, mapMutations } from 'vuex'
 import { deviceUnBind } from './../../sverse/api.js'
 import { Toast, Loading, Confirm } from 'vue-ydui/dist/lib.rem/dialog';
-import { success } from './../../utils/toast.js'
+import { success, toast } from './../../utils/toast.js'
 import { getStorage } from './../../utils/device/DataHandler.js'
     export default {
         data () {
@@ -130,10 +130,16 @@ import { getStorage } from './../../utils/device/DataHandler.js'
                             txt: '确定',
                             color: true,
                             callback: () => {
-                                deviceUnBind(t_data.deviceGetInfo.deviceId).then((res) => {
-                                    success({msg: '解绑成功！'})
-                                    t_data.$router.replace({name: "RelationDevice",params:{}})
-                                })
+                                
+                                if(this.deviceConnectState){
+                                    deviceUnBind(t_data.deviceGetInfo.deviceId).then((res) => {
+                                        success({msg: '解绑成功！'})
+                                        t_data.$router.replace({name: "RelationDevice",params:{}})
+                                    })
+                                }else{
+                                    toast({msg: '手环已断开连接，请稍后再试！'})
+                                }
+
                             }
                         }
                     ]
@@ -141,6 +147,21 @@ import { getStorage } from './../../utils/device/DataHandler.js'
             },
             setCycleFlag(){
                 this.changeHolidayReminder()
+            },
+            carriedSetCall(){
+
+                if(this.deviceConnectState){
+                    
+                    setTimeout(()=>{
+                        alert(this.setCall)
+                        window.localStorage.setCall = this.setCall;
+                        this.setAddCall({status: this.setCall});
+                    }, 500)
+
+                }else{
+                    toast({msg: '手环已断开连接，请稍后再试！'})
+                }
+                
             },
         },
         computed:{
@@ -156,7 +177,10 @@ import { getStorage } from './../../utils/device/DataHandler.js'
                 },
                 userGetInfo: state => {
                     return state.main.userInfo
-                }
+                },
+                deviceConnectState: state =>{
+                    return state.main.deviceInfo.connectState
+                },
             })
         },
         watch:{
@@ -168,17 +192,21 @@ import { getStorage } from './../../utils/device/DataHandler.js'
                 console.log(val)
                 // cycle 【行经周期】
                 // nextremind 【行经天数】
-                if(val==true){
-                    // 打开
-                    this.deviceInfoSet({remindonstate: 1, cycle: this.userGetInfo.menstruationCycle, nextremind: this.userGetInfo.menstruationDays})
+                
+                if(this.deviceConnectState){
+
+                    if(val==true){
+                        // 打开
+                        this.deviceInfoSet({remindonstate: 1, cycle: this.userGetInfo.menstruationCycle, nextremind: this.userGetInfo.menstruationDays})
+                    }else{
+                        // 关闭
+                        this.deviceInfoSet({remindonstate: 2, cycle: this.userGetInfo.menstruationCycle, nextremind: this.userGetInfo.menstruationDays})
+                    }
+
                 }else{
-                    // 关闭
-                    this.deviceInfoSet({remindonstate: 2, cycle: this.userGetInfo.menstruationCycle, nextremind: this.userGetInfo.menstruationDays})
+                    toast({msg: '手环已断开连接，请稍后再试！'})
                 }
-            },
-            setCall(val, vals){
-                window.localStorage.setCall = val;
-                this.setAddCall({status: val});
+
             },
         }
     }

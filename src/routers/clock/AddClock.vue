@@ -22,7 +22,7 @@
                         <option value="00000000">只响一次</option>
                         <option value="00111110">周一到周五</option>
                         <option value="11111111">每天</option>
-                        <option value="2">自定义</option>
+                        <option value="2">{{ (chooseType=='2'?countDay(postData.repeatByte):'自定义')  }}</option>
                     </select>
                 </span>
 
@@ -33,7 +33,7 @@
             <div class="btn" @click="saveClock">保存</div>
         </div>
 
-        <yd-popup v-model="chooseDay" position="bottom" height="60%">
+        <yd-popup id="selectDay" v-model="chooseDay" position="bottom" height="70%">
 
             <div class="box">
                 <yd-cell-group>
@@ -67,7 +67,10 @@
                     </yd-cell-item>
                 </yd-cell-group>
             </div>
-
+            <div class="btn">
+                <yd-button size="large" type="hollow" @click.native="chooseDay=false">取消</yd-button>
+                <yd-button size="large" type="hollow" @click.native="chooseDay=false">确定</yd-button>
+            </div>
         </yd-popup>
 
     </div>
@@ -90,6 +93,8 @@ import { success, confirm, toast } from './../../utils/toast.js'
         },
         data () {
             return {
+                dayType: [' ','周六','周五','周四','周三','周二','周一','周日',],
+                chooseDayType: '',
                 chooseDay: false,
                 chooseType: '00000000',
                 chooseTime: '',
@@ -98,7 +103,8 @@ import { success, confirm, toast } from './../../utils/toast.js'
                     repeatByte: [0,0,0,0,0,0,0,0],
                     status: true
                 },
-                days: [false,false,false,false,false,false,false,false]
+                days: [false,false,false,false,false,false,false,false],
+                daysText: []
             }
         },
         created(){
@@ -109,6 +115,7 @@ import { success, confirm, toast } from './../../utils/toast.js'
             let nowtimebytes = [now.getFullYear(), (now.getMonth() + 1), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()];
             let month = Number(now.getMonth());
             this.chooseTime = `${now.getHours()}:${now.getMinutes()}`
+
         },
         computed:{
             ...mapState({
@@ -121,6 +128,12 @@ import { success, confirm, toast } from './../../utils/toast.js'
             chooseType(val, vals){
                 if(val=='2'){
                     this.chooseDay = true;
+
+                    let typeArrs = this.days.map((item, index)=>{
+                        return Number(item)
+                    })
+                    this.postData.repeatByte = typeArrs;
+
                 }else{
                     let typeArr = val.split('')
                     let typeArrs = typeArr.map((item, index)=>{
@@ -152,16 +165,6 @@ import { success, confirm, toast } from './../../utils/toast.js'
             ]),
             countFlag(status){
             },
-            countDay(arr){
-                console.log(this.clockList)
-                let counts = [];
-                arr.map((item, index)=>{
-                    if(item==1){
-                        counts.push(this.day[index])
-                    }
-                })
-                return counts.join(',')
-            },
             saveClock(){
                 if(!this.chooseTime){
                     toast({msg: '请选择时间！'})
@@ -178,11 +181,33 @@ import { success, confirm, toast } from './../../utils/toast.js'
                 setTimeout(()=>{
                     this.$router.back();
                 },1000)
-            }
+            },
+            countDay(arr){
+
+                let counts = [];
+                arr.map((item, index)=>{
+                    if(item==1){
+                        counts.push(this.dayType[index])
+                    }
+                })
+                return (counts.length==0?'自定义':counts.reverse().join(','))
+
+            },
         }
     }
 </script>
 <style lang="less" scoped>
+
+    .yd-popup-content > div{
+        height: 100%;
+    }
+    .btn{
+        box-sizing: border-box;
+        padding: 0 15px;
+        button{
+            margin-top: .2rem;
+        }
+    }
     #addClock{
         .box{
             .yd-cell-box{
@@ -197,6 +222,16 @@ import { success, confirm, toast } from './../../utils/toast.js'
                         }
                     }
                 }
+            }
+        }
+        .yd-popup-content>div{
+            height: 100%;
+        }
+        .btn{
+            display: flex;
+            justify-content: space-between;
+            button{
+                width: 48%;
             }
         }
         select{

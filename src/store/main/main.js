@@ -911,10 +911,11 @@ const actions = {
 
         let clockList = state.clockList
         // 循环闹钟列表设置为设置的闹钟;
-        if(Number(index)=='number'){
+        if(index){
             
             let indexs = index-1;
             console.error(`关闭或删除的数组序列号【${indexs}】闹钟列号【${index}】`)
+            
             // 改变列表上的数据
             commit('changeClock',{
                 index: indexs,
@@ -925,6 +926,7 @@ const actions = {
                     time: time
                 }
             })
+
             // 发起设置手环命令
             dispatch('setClock',{
                 index: index,

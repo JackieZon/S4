@@ -319,7 +319,7 @@ export function DataHandler(cmd, framesize, t_data) {
                             )
 
                             if(packet.Data.length==0){
-                                toast({msg: '设置闹钟成功！'})
+                                // toast({msg: '设置闹钟成功！'})
                             }else{
                                 
                                 console.error(`在次发起查询闹钟`)
@@ -667,21 +667,21 @@ export function SleepDataHandler(t_data) {
                 var SleepDurationSeconds = bytesToNumber(packet.Data.slice(9, 10));
                 var SleepDuration = (SleepDurationHours * 60 + SleepDurationMinutes) * 60 + SleepDurationSeconds;
 
-                let postData = {
-                    "deviceType": 2, //设备类型 0:h1,1:G1,2:S3,3:S4
-                    "type": 0,     //0：走路，1：跑步
-                    "stepNum": 12000,  //步数
-                    "caloric": 5000.2, //卡路里
-                    "mileage": 10000,  //里程，米
-                    "startTime": "2017-08-31 18:25:21",
-                    "endTime": "2017-08-31 19:28:21",
-                    "durationTime": 63,  //持续时间，秒
-                    "deviceId": 998      //设备id必填项
-                }
+                // let postData = {
+                //     "deviceType": 3, //设备类型 0:h1,1:G1,2:S3,3:S4
+                //     "type": 0,     //0：走路，1：跑步
+                //     "stepNum": 12000,  //步数
+                //     "caloric": 5000.2, //卡路里
+                //     "mileage": 10000,  //里程，米
+                //     "startTime": "2017-08-31 18:25:21",
+                //     "endTime": "2017-08-31 19:28:21",
+                //     "durationTime": 63,  //持续时间，秒
+                //     "deviceId": 998      //设备id必填项
+                // }
 
                 var param = {
                     type: SleepStatus,
-                    deviceType: 2,
+                    deviceType: 3,
                     startTime: SleepStartTime,
                     endTime: '',
                     durationTime: SleepDuration,
@@ -692,7 +692,7 @@ export function SleepDataHandler(t_data) {
                 // let arrs = [
                 //     {
                 //         "type":1,
-                //         "deviceType":1,
+                //         "deviceType": 3,
                 //         "startTime":"2017-11-11 11:11:11",
                 //         "endTime":"2017-11-11 11:11:11",
                 //         "durationTime":60,
@@ -780,7 +780,7 @@ export function SportDataHandler(t_data) {
                 var SportCalorie = bytesToNumber(packet.Data.slice(12, 14));
 
                 var param = {
-                    deviceType: 2,//设备类型
+                    deviceType: 3,//设备类型
                     type: SportStatus,//运动状态
                     stepNum: SportStepCount,//步数
                     caloric: SportCalorie,//卡路里
@@ -793,7 +793,7 @@ export function SportDataHandler(t_data) {
 
                 // var data = [
                 //     {
-                //         "deviceType": 2, //设备类型 0:h1,1:G1,2:S3,3:S4
+                //         "deviceType": 3, //设备类型 0:h1,1:G1,2:S3,3:S4
                 //         "type": 0,     //0：走路，1：跑步
                 //         "stepNum": 12000,  //步数
                 //         "caloric": 5000.2, //卡路里
@@ -878,7 +878,7 @@ export function TempRHPressDataHandler(t_data) {
                 var RecordTime = '20' + String(RecordTimeYear).PadLeft(2) + '-' + RecordTimeMonth + '-' + RecordTimeDay + ' ' + RecordTimeHours + ':' + (RecordTimeMinutes<10?'0'+RecordTimeMinutes:RecordTimeMinutes) + ':' + (RecordTimeSeconds<10?'0'+RecordTimeSeconds:RecordTimeSeconds);
 
                 var param = {
-                    deviceType: 2,
+                    deviceType: 3,
                     wecDeviceId: getStorage.deviceId(),
                     temperature: Number(Temp),
                     humidity: Number(RH),
@@ -889,7 +889,7 @@ export function TempRHPressDataHandler(t_data) {
 
                 // var data = [
                 //     {
-                //      "deviceType":2,     //设备类型0:h1,1:G1，2：S3,3:S4
+                //      "deviceType":3,     //设备类型0:h1,1:G1，2：S3,3:S4
                 //      "deviceId":3,       //设备id
                 //      "temperature": 35.3,//温度：摄氏度
                 //      "humidity": 28,     //湿度：%
@@ -982,7 +982,7 @@ export function PulseDataHandler(t_data) {
                 var param = {
                     wecDeviceId: getStorage.deviceId(),
                     hrCount: Pulse,
-                    deviceType: 2,
+                    deviceType: 3,
                     type: SportStatus,
                     measureType: StartType,
                     surfaceTem: BodySurfaceTemp,
@@ -994,7 +994,7 @@ export function PulseDataHandler(t_data) {
                 //     "deviceId":1,       //设备id
                 //     "hrCount": 95,       //心率值
                 //     "result": 1,       //-1偏低、0理想、1正常、2偏快
-                //     "deviceType": 0,   //设备类型 0:h1,1:G1,2:S3,3:S4
+                //     "deviceType": 3,   //设备类型 0:h1,1:G1,2:S3,3:S4
                 //     "type": 0,           //所处状态：0 静止、1动态,默认0
                 //     "measureType": 1,  //检测模式 1：手动 2：自动,3:未带手环,4：整点测量 5：动态心率
                 //     "surfaceTem": 37.5,//体表温度：摄氏度
