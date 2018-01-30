@@ -858,17 +858,18 @@ const actions = {
         }
     },
     closeDynamicHeartRate({ commit, state, dispatch, getters }, payload){
-        let { taskQueue, dynamicHeartRate } = state
-
-        if(dynamicHeartRate.heartRateTimer){
-            clearInterval(dynamicHeartRate.heartRateTimer)
+        if(dynamicHeartRate.status==3){
+            return
+        }else{
+            let { taskQueue, dynamicHeartRate } = state
+            if(dynamicHeartRate.heartRateTimer){
+                clearInterval(dynamicHeartRate.heartRateTimer)
+            }
+            setTimeout(()=>{
+                commit('setDynamicHeartRate',{ status: 3 })
+                dispatch('SendCmd', { cmd: Cmd.dynamicHeartRate, data: '03' });
+            }, 1000)
         }
-
-        setTimeout(()=>{
-            commit('setDynamicHeartRate',{ status: 3 })
-            dispatch('SendCmd', { cmd: Cmd.dynamicHeartRate, data: '03' });
-        }, 1000)
-
     },
     pushDynamicHeartRate({ commit, state, dispatch, getters }, payload){
         let { taskQueue } = state
@@ -914,7 +915,7 @@ const actions = {
         if(index){
             
             let indexs = index-1;
-            console.error(`关闭或删除的数组序列号【${indexs}】闹钟列号【${index}】`)
+            console.error(`【关闭、删除、编辑】的数组序列号【${indexs}】闹钟列号【${index}】`)
             
             // 改变列表上的数据
             commit('changeClock',{

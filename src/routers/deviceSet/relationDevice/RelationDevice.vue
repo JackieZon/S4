@@ -17,8 +17,29 @@
         </div>
         <div class="but">
             <yd-cell-item>
+                <!-- <yd-input style="height: .8rem; background: white;" slot="right" placeholder="设备类型">
+                </yd-input> -->
+                <span slot="right" class="yd-input">
+                    <select v-model="deviceType">
+                        <option value="0">请选择手环类型</option>
+                        <option value="2">S3</option>
+                        <option value="3">S4</option>
+                    </select>
+                </span>
+                <!-- <yd-cell-item arrow>
+                    <span slot="left">
+                        <select v-model="chooseType" dir="rtl">
+                            <option value="00000000">只响一次</option>
+                            <option value="00111110">周一到周五</option>
+                            <option value="11111111">每天</option>
+                            <option value="2">{{ (chooseType=='2'?countDay(postData.repeatByte):'自定义')  }}</option>
+                        </select>
+                    </span>
+                </yd-cell-item> -->
                 <yd-input style="height: .8rem; background: white;" slot="right" v-model="deviceSnMac" placeholder="序列号"></yd-input>
             </yd-cell-item>
+        </div>
+        <div class="but">
             <yd-button slot="right" size="large" type="primary" @click.native="getDeciceInfoBySnMac()">查询</yd-button>
         </div>
         <div class="device_info" v-if="deviceInfoStatus">
@@ -38,6 +59,7 @@
     export default {
         data () {
             return {
+                deviceType: 0,
                 deviceSnMac:"",
                 deviceInfoStatus: false,
                 deviceInfo:'',
@@ -56,7 +78,12 @@
                     alert({msg:'请输入7位设备序列号！'})
                     return
                 }
-                getDeciceInfoBySnMac({deviceType: 2, deviceNo: t_data.deviceSnMac}).then((res) => {
+                if(t_data.deviceType==0){
+                    alert({msg:'请选择手环类型！'})
+                    return
+                }
+                
+                getDeciceInfoBySnMac({deviceType: t_data.deviceType, deviceNo: t_data.deviceSnMac}).then((res) => {
                     console.log('搜索设备编号获取二维码')
                     console.log(res)
                     if(res.data.status){
@@ -129,8 +156,13 @@
             }
 
             .yd-input {
+                background: #fff;
                 width: 12rem;
+                height: 0.8rem;
                 padding: 0 .2rem;
+                border: 1px solid #666;
+                border-radius: .4rem;
+                margin-left: 5px;
             }
         }
 

@@ -8,7 +8,7 @@
         <yd-cell-item>
           <span slot="left" class="setting-name">心率提醒</span>
           <span slot="right">
-            <yd-switch v-model="heartRateRemind"></yd-switch>
+            <yd-switch v-model="heartRateRemind" @click.native="toastShow()"></yd-switch>
           </span>
         </yd-cell-item>
       </div>
@@ -96,6 +96,9 @@ export default {
       })
 
     },
+    toastShow(){
+      toast({msg: '设置成功!'})
+    }
   },
   watch: {
     'heartRateRemind':{

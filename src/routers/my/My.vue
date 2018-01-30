@@ -130,7 +130,7 @@ import { success } from './../../utils/toast.js'
                     return
                 }
                 
-                if(!(weightReg.test(this.userInfo.weight)&&(this.userInfo.weight>5&&this.userInfo.weight<200))){
+                if(!(this.userInfo.weight>5&&this.userInfo.weight<200)){
                     Toast({mes:'请入正确的体重！', timeout: 2000})
                     return
                 }

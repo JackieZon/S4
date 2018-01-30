@@ -150,4 +150,10 @@ export default {
     z-index: 2000;
   }
 }
+#inputText{
+  input{
+    text-align: right;
+  }
+}
+// .yd-cell-right .yd-datetime-input, .yd-cell-right input[type=date], .yd-cell-right input[type=datetime-local], .yd-cell-right input[type=email], .yd-cell-right input[type=number]:not(.yd-spinner-input), .yd-cell-right input[type=password], .yd-cell-right input[type=tel], .yd-cell-right input[type=text], .yd-cell-right input[type=time], .yd-cell-right input[type=url]{text-align: right;}
 </style>

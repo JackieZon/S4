@@ -33,8 +33,10 @@
       }
 
       (function(){
-        var route =getUrlParam('route');
+        var route = getUrlParam('route');
+        var pageType = getUrlParam('pageType');
         window.localStorage.setItem('route',route)
+        window.localStorage.setItem('pageType',pageType)
         if(route){
           location.href = '#/'+ route;
         }

@@ -14,13 +14,13 @@
                     </div>
                     <div class="user_device">
                         <div class="device_status">
-                            <p>{{ deviceInfo.deviceName || '暂无'}}</p>
+                            <p>{{ deviceInfo.deviceName || '暂无'}}</p> <span :style="{color: (deviceInfo.connectState?'#50c647':'red')}">({{deviceInfo.connectState?'已连接':'未连接'}})</span>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="device_info" @click="openPages('DeviceSet',{})">
-                <div class="set"><img src="./../../assets/images/set.png" alt="" srcset=""><div class="span">设置</div></div>
+            <div class="device_info" @click="openDeviceSet">
+                <div class="set"><img src="./../../assets/images/set.png" alt="" srcset=""><div class="span">提醒设置</div></div>
             </div>
         </div>
         <div class="health">
@@ -213,6 +213,10 @@
                         break;
                 }
             },
+            openDeviceSet(){
+                window.localStorage.setItem('pageType',1);
+                this.openPages('DeviceSet',{});
+            }
         },
         // watch: {
         //     // selectedDate: function (newDate, oldDate) {
@@ -299,6 +303,7 @@
                             font-size: 14px;
                             p{
                                 color:#333;
+                                display: inline-block;
                             }
                             span { color: red; }
                         }

@@ -8,7 +8,7 @@
         <yd-cell-item>
           <span slot="left" class="setting-name">温差提醒</span>
           <span slot="right">
-            <yd-switch v-model="temperatureDifferenceRemind"></yd-switch>
+            <yd-switch v-model="temperatureDifferenceRemind" @click.native="toastShow()"></yd-switch>
           </span>
         </yd-cell-item>
       </div>
@@ -88,23 +88,22 @@ export default {
     ]),
     setDeciceSetInfo () {
       setDeciceSetInfo(this.postData).then((res)=>{
-        toast({msg: '设置成功！'})
         this.deviceInfoSetingSet(this.postData);
         this.deviceInfoSet(this.postData)
         l.w('HeartRate.destroyed')
         this.changeDeviceInfo()
       })
+    },
+    toastShow(){
+        toast({msg: '设置成功!'})
     }
-    
   },
   watch: {
     temperatureDifferenceRemind (val,vals) {
       this.postData.temperatureDifferenceRemind = (val?1:0);
       
         if(this.deviceConnectState){
-
             this.setDeciceSetInfo()
-
         }else{
             toast({msg: '手环已断开连接，请稍后再试！'})
         }

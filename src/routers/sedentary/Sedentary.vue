@@ -15,7 +15,7 @@
                 </span>
             </yd-cell-item>
             <yd-cell-item arrow>
-                <span slot="left">重复</span>
+                <span slot="left">提醒周期</span>
 
                 <span slot="right">
                     <select v-model="chooseType" dir="rtl">
@@ -129,7 +129,7 @@ import { success, confirm, toast } from './../../utils/toast.js'
             let month = Number(now.getMonth());
 
             this.startTime = `${9}:${0}`
-            this.endTime = `${15}:${0}`
+            this.endTime = `${17}:${0}`
 
             this.countSedentaryData()
             this.postData = {...this.sedentaryData}

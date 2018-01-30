@@ -9,7 +9,7 @@
                 </div>
             </div>
             <div class="dynamicVal">
-                <div class="val">{{heartRateList.length?heartRateList[heartRateList.length-1].hrCount:0}}</div>
+                <div class="val" ref="dynamicVal">{{heartRateList.length?heartRateList[heartRateList.length-1].hrCount:'--'}}</div>
                 <div class="label">次/分钟</div>
             </div>
         </div>
@@ -34,6 +34,7 @@ import { success, toast } from './../../utils/toast.js'
         },
         data () {
             return {
+                setintervalNum: 0,
                 veLineStatus: true,
                 chartData: {
                     columns: ['testTime', 'hrCount'],
@@ -107,6 +108,23 @@ import { success, toast } from './../../utils/toast.js'
                 'closeDynamicHeartRate',
 
             ]),
+            setintervalCount(){
+                if(this.setintervalNum==0){
+                    this.setintervalNum = setInterval(()=>{
+
+                        if(this.heartRateList.length!==0){
+                            clearInterval(this.setintervalNum)
+                            this.$refs.dynamicVal.style.color = '#333'
+                            return
+                        }
+
+                        this.$refs.dynamicVal.style.color = '#fff'
+                        setTimeout(()=>{
+                            this.$refs.dynamicVal.style.color = '#333'
+                        },750)
+                    }, 1500)
+                }
+            },
             openRecord(){
                 this.setDynamicHeartRate({ status: 3 })
                 this.openPages('DynamicRecord',{})
@@ -116,6 +134,8 @@ import { success, toast } from './../../utils/toast.js'
                 this.$router.push({name: name, params: param});
             },
             openDynamicHeartRate(){
+                // 执行闪动
+                this.setintervalCount();
                 if(this.dynamicHeartRateStatus==3){
                     this.getDynamicHeartRate()
                 }else{

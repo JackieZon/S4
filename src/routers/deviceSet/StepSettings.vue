@@ -10,7 +10,7 @@
                 <yd-cell-item>
                     <span slot="left" class="setting-name">步数提醒：</span>
                     <span slot="right">
-                        <yd-switch v-model="sportTargetRemind"></yd-switch>
+                        <yd-switch v-model="sportTargetRemind" @click.native="toastShow()"></yd-switch>
                     </span>
                 </yd-cell-item>
             </div>
@@ -89,6 +89,9 @@ export default {
                 l.w('HeartRate.destroyed')
                 this.changeDeviceInfo()
             })
+        },
+        toastShow(){
+            toast({msg: '设置成功!'})
         }
     },
     watch:{

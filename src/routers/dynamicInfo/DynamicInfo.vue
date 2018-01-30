@@ -32,7 +32,7 @@ import { success } from './../../utils/toast.js'
         },
         data () {
             return {
-                comStatus: false,
+                comStatus: true,
                 chartData: {
                     columns: ['testTime', 'hrCount'],
                     rows: [
@@ -85,7 +85,7 @@ import { success } from './../../utils/toast.js'
                     this.chartData.rows = JSON.parse(res.data.info.hrCountRecords)
                     setTimeout(()=>{
                         this.comStatus = true;
-                    }, 800)
+                    }, 50)
                 })
             }
         }

@@ -52,7 +52,7 @@ export const saveOrUpdateImportantDateRemind = async (param) => {
 export const getHistoryData = async (time) => {
     console.error(`Api 方法 getHistoryData：${time}`)
     let userId = window.localStorage.userId;
-    return await axiosApi(`${apiUrl}healthRecord/queryHealthHty.wxhtml?deviceType=2&belongDate=${time}&userId=${userId}`, "get", {deviceType: 2, belongDate: time});
+    return await axiosApi(`${apiUrl}healthRecord/queryHealthHty.wxhtml?deviceType=3&belongDate=${time}&userId=${userId}`, "get", {deviceType: 3, belongDate: time});
 }
 
 /**
@@ -80,7 +80,7 @@ export const getDeciceInfoBySnMac = async (param) => {
  */
 export const getUserSet = async (param) => {
     let userId = window.localStorage.userId;
-    return await axiosApi(`${apiUrl}user/getUserSet.wxhtml?deviceType=2&userId=${userId}`, "get", param);
+    return await axiosApi(`${apiUrl}user/getUserSet.wxhtml?deviceType=3&userId=${userId}`, "get", param);
 }
 
  /**

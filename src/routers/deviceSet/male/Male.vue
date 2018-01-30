@@ -17,7 +17,8 @@
                 <yd-cell-item arrow>
                     <span slot="left">内容</span>
                     <span class="span_color" slot="right"></span>
-                    <input slot="right" v-model="postData.content" type="text" placeholder="1-10字符">
+                    <yd-input slot="right" id="inputText" v-model="postData.content" required style="text-align: right;" :max="10" :show-success-icon="false" :show-clear-icon="false" :show-required-icon="false" :show-error-icon="false" placeholder="1-10字符"></yd-input>
+                    <!-- <input slot="right" type="text" placeholder="1-10字符"> -->
                 </yd-cell-item>
             </yd-cell-group>
             <div class="isOk">
@@ -152,7 +153,7 @@ import { alert, toast } from './../../../utils/toast'
 <style lang="less" scoped>
     #male {
         input{
-            text-align: right;
+            text-align: right!important;
             color: #666;
         }
         select{

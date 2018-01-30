@@ -110,7 +110,7 @@ export default new Router({
       component: Clock
     },
     {
-      path: '/AddClock',
+      path: '/AddClock/:itemIndex',
       name: 'AddClock',
       component: AddClock
     },

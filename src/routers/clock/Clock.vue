@@ -3,9 +3,9 @@
         <div class="clockList" v-if="listStatus">
             <RightStroke :stylesx="{height: '1.45rem'}" v-for="(item, index) in clockList" v-if="typeof(item.status)=='boolean'" v-on:increment="delClock(item)" :key="`${index}s`">
                 <div class="recordList">
-                    <div class="clockContent" @click="openPages('DynamicInfo',{index: item.index})">
+                    <div class="clockContent" @click="openPages('AddClock',{itemIndex: index})">
                         <div class="time">{{ countTime(item.time) }}</div>
-                        <div class="text">{{ countDay(item.repeatByte) }}</div>
+                        <div class="text">{{ countDay(item.repeatByte)?countDay(item.repeatByte):'只响一次' }}</div>
                     </div>
                     <div class="right">
                         <yd-switch v-model="item.status" @click="closeClock(item)"></yd-switch>
@@ -96,7 +96,6 @@ import { success, confirm, toast } from './../../utils/toast.js'
                         this.addClock({index: index, status: null, repeatByte: [0,0,0,0,0,0,0,0], time: [0,0,0]})
                         toast({msg: '删除成功！'})
                         this.listStatus = true
-
                     }else{
                         console.log('取消！')
                     }
@@ -131,7 +130,7 @@ import { success, confirm, toast } from './../../utils/toast.js'
 
             },
             openClockPage(){
-                this.openPages('AddClock',{})
+                this.openPages('AddClock',{itemIndex:-1})
             }
         }
     }

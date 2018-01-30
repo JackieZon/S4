@@ -1,73 +1,76 @@
 <template>
     <div id="device_set">
-        <yd-cell-group>
-            <yd-cell-item href="#" type="link">
-                <div class="title" slot="left">
-                    <span>{{ deviceGetInfo.deviceName }}</span>
-                    <span>({{ deviceGetInfo.userCodeVer}})</span>
-                </div>
-                <div slot="right" class="but" style="width: 100%; display: flex; flex-direction: row-reverse;">
-                    <yd-button size="large" @click.native="relieveDevice" type="danger">解除绑定</yd-button>
-                </div>
-            </yd-cell-item>
-            <yd-cell-item arrow href="#" type="link" @click.native="openPages('DeviceInfo',{})">
-                <span slot="left">设备信息</span>
-                <div class="code" slot="right" >
-                    <img src="./../../assets/icon/code.svg" alt="">
-                </div>
-            </yd-cell-item>
-        </yd-cell-group>
-        <yd-cell-group>
-                <yd-cell-item arrow type="a" @click.native="openPages('StepSettings',{})">
-                    <span slot="left">步数提醒</span>
-                    <span class="span_color" slot="right">{{ deviceInfoSeting.sportTargetRemind == 1 ? deviceInfoSeting.sportTarget + " 步" : "未设置"}}</span>
+        <div class="pageType1" v-if="pageType==2">
+            <yd-cell-group>
+                <yd-cell-item href="#" type="link">
+                    <div class="title" slot="left">
+                        <span>{{ deviceGetInfo.deviceName }}</span>
+                        <span>({{ deviceGetInfo.userCodeVer}})</span>
+                    </div>
+                    <div slot="right" class="but" style="width: 100%; display: flex; flex-direction: row-reverse;">
+                        <yd-button size="large" @click.native="relieveDevice" type="danger">解除绑定</yd-button>
+                    </div>
                 </yd-cell-item>
-                <yd-cell-item arrow type="a" @click.native="openPages('HeartRate',{})">
-                    <span slot="left">心率提醒</span>
-                    <span class="span_color" slot="right">{{ deviceInfoSeting.heartRateRemind == 1 ? deviceInfoSeting.heartRateCountRemind + " bpm": "未设置"}}</span>
+                <yd-cell-item arrow href="#" type="link" @click.native="openPages('DeviceInfo',{})">
+                    <span slot="left">设备信息</span>
+                    <div class="code" slot="right" >
+                        <img src="./../../assets/icon/code.svg" alt="">
+                    </div>
                 </yd-cell-item>
-                <yd-cell-item arrow type="a" @click.native="openPages('TempDiff',{})">
-                    <span slot="left">温差提醒</span>
-                    <span class="span_color" slot="right">{{ deviceInfoSeting.temperatureDifferenceRemind == 1 ? deviceInfoSeting.temperatureDifferenceValue  + " ℃" : "未设置"}}</span>
+            </yd-cell-group>
+        </div>
+        <div class="pageType2" v-if="pageType==1">
+            <yd-cell-group>
+                    <yd-cell-item arrow type="a" @click.native="openPages('StepSettings',{})">
+                        <span slot="left">步数提醒</span>
+                        <span class="span_color" slot="right">{{ deviceInfoSeting.sportTargetRemind == 1 ? deviceInfoSeting.sportTarget + " 步" : "未设置"}}</span>
+                    </yd-cell-item>
+                    <yd-cell-item arrow type="a" @click.native="openPages('HeartRate',{})">
+                        <span slot="left">心率提醒</span>
+                        <span class="span_color" slot="right">{{ deviceInfoSeting.heartRateRemind == 1 ? deviceInfoSeting.heartRateCountRemind + " bpm": "未设置"}}</span>
+                    </yd-cell-item>
+                    <yd-cell-item arrow type="a" @click.native="openPages('TempDiff',{})">
+                        <span slot="left">温差提醒</span>
+                        <span class="span_color" slot="right">{{ deviceInfoSeting.temperatureDifferenceRemind == 1 ? deviceInfoSeting.temperatureDifferenceValue  + " ℃" : "未设置"}}</span>
+                    </yd-cell-item>
+                    <!-- <yd-cell-item arrow type="a" @click.native="openPages('RelationDevice',{})">
+                        <span slot="left">测试设备绑定</span>
+                        <span class="span_color" slot="right">未设置</span>
+                    </yd-cell-item> -->
+            </yd-cell-group>
+
+            <yd-cell-group v-if="sex==0">
+                <yd-cell-item>
+                    <span slot="left" class="setting-name">女性生理期</span>
+                    <span slot="right">
+                        <yd-switch v-model="cycleFlag" @click.native="setCycleFlag"></yd-switch>
+                    </span>
                 </yd-cell-item>
-                <!-- <yd-cell-item arrow type="a" @click.native="openPages('RelationDevice',{})">
-                    <span slot="left">测试设备绑定</span>
-                    <span class="span_color" slot="right">未设置</span>
-                </yd-cell-item> -->
-        </yd-cell-group>
+                <yd-cell-item arrow type="a" @click.native="openPages('FemaleSet',{})">
+                    <span slot="left">女性生理期设置</span>
+                </yd-cell-item>
+            </yd-cell-group>
+            <yd-cell-group v-if="sex==1">
+                <yd-cell-item arrow type="a" @click.native="openPages('Male',{})">
+                    <span slot="left">重要日期提醒</span>
+                </yd-cell-item>
+            </yd-cell-group>
 
-        <yd-cell-group v-if="sex==0">
-            <yd-cell-item>
-                <span slot="left" class="setting-name">女性生理期</span>
-                <span slot="right">
-                    <yd-switch v-model="cycleFlag" @click.native="setCycleFlag"></yd-switch>
-                </span>
-            </yd-cell-item>
-            <yd-cell-item arrow type="a" @click.native="openPages('FemaleSet',{})">
-                <span slot="left">女性生理期设置</span>
-            </yd-cell-item>
-        </yd-cell-group>
-        <yd-cell-group v-if="sex==1">
-            <yd-cell-item arrow type="a" @click.native="openPages('Male',{})">
-                <span slot="left">重要日期提醒</span>
-            </yd-cell-item>
-        </yd-cell-group>
-
-        <yd-cell-group>
-            <yd-cell-item arrow type="a" @click.native="openPages('Clock',{})">
-                <span slot="left">闹钟提醒</span>
-            </yd-cell-item>
-            <yd-cell-item>
-                <span slot="left" class="setting-name">来电提醒</span>
-                <span slot="right">
-                    <yd-switch v-model="setCall" @click.native="carriedSetCall"></yd-switch>
-                </span>
-            </yd-cell-item>
-            <yd-cell-item arrow type="a" @click.native="openPages('Sedentary',{})">
-                <span slot="left">久坐提醒</span>
-            </yd-cell-item>
-        </yd-cell-group>
-
+            <yd-cell-group>
+                <yd-cell-item arrow type="a" @click.native="openPages('Clock',{})">
+                    <span slot="left">闹钟提醒</span>
+                </yd-cell-item>
+                <yd-cell-item>
+                    <span slot="left" class="setting-name">来电提醒</span>
+                    <span slot="right">
+                        <yd-switch v-model="setCall" @click.native="carriedSetCall"></yd-switch>
+                    </span>
+                </yd-cell-item>
+                <yd-cell-item arrow type="a" @click.native="openPages('Sedentary',{})">
+                    <span slot="left">久坐提醒</span>
+                </yd-cell-item>
+            </yd-cell-group>
+        </div>
     </div>
 </template>
 <script>
@@ -84,6 +87,7 @@ import { getStorage } from './../../utils/device/DataHandler.js'
                 deviceSetInfo: {},
                 cycleFlag: false,
                 setCall: false,
+                pageType: 1,
             }
         },
         mounted () {
@@ -93,6 +97,9 @@ import { getStorage } from './../../utils/device/DataHandler.js'
             this.userId = window.localStorage.userId;
             this.sex = Number(window.localStorage.sex);
             this.deviceSetInfo = {...this.deviceSetInfo, ...this.deviceGetInfo};
+            this.pageType = window.localStorage.pageType;
+
+            console.error(this.pageType)
 
             if(this.remindonstate == 1){
                 this.cycleFlag = true;
@@ -112,7 +119,11 @@ import { getStorage } from './../../utils/device/DataHandler.js'
             openPages (name,param) {
                 if(!name) return
                 param = (JSON.stringify(param) == "{}" ? {} : param);
-                this.$router.push({name: name, params: param});
+                if(this.deviceConnectState){
+                    this.$router.push({name: name, params: param});
+                }else{
+                    toast({msg: '手环已断开连接，请稍后再试！'})
+                }
             },
             relieveDevice (){
                 var t_data = this;
@@ -131,14 +142,14 @@ import { getStorage } from './../../utils/device/DataHandler.js'
                             color: true,
                             callback: () => {
                                 
-                                if(this.deviceConnectState){
+                                // if(this.deviceConnectState){
                                     deviceUnBind(t_data.deviceGetInfo.deviceId).then((res) => {
                                         success({msg: '解绑成功！'})
                                         t_data.$router.replace({name: "RelationDevice",params:{}})
                                     })
-                                }else{
-                                    toast({msg: '手环已断开连接，请稍后再试！'})
-                                }
+                                // }else{
+                                //     toast({msg: '手环已断开连接，请稍后再试！'})
+                                // }
 
                             }
                         }
@@ -153,7 +164,6 @@ import { getStorage } from './../../utils/device/DataHandler.js'
                 if(this.deviceConnectState){
                     
                     setTimeout(()=>{
-                        alert(this.setCall)
                         window.localStorage.setCall = this.setCall;
                         this.setAddCall({status: this.setCall});
                     }, 500)

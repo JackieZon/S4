@@ -15,7 +15,7 @@
                 </span>
             </yd-cell-item> -->
             <yd-cell-item arrow>
-                <span slot="left">重复</span>
+                <span slot="left">周期</span>
 
                 <span slot="right">
                     <select v-model="chooseType" dir="rtl">
@@ -101,7 +101,8 @@ import { success, confirm, toast } from './../../utils/toast.js'
                 postData: {
                     time: [0,0,0],
                     repeatByte: [0,0,0,0,0,0,0,0],
-                    status: true
+                    status: true,
+                    index: 0
                 },
                 days: [false,false,false,false,false,false,false,false],
                 daysText: []
@@ -115,13 +116,43 @@ import { success, confirm, toast } from './../../utils/toast.js'
             let nowtimebytes = [now.getFullYear(), (now.getMonth() + 1), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()];
             let month = Number(now.getMonth());
             this.chooseTime = `${now.getHours()}:${now.getMinutes()}`
+            console.log(this.$route.params.itemIndex)
+            let itemIndex = this.$route.params.itemIndex
+
+            if(itemIndex!==-1){
+                console.log(this.clockList[itemIndex])
+                let obj = this.clockList[itemIndex];
+                this.chooseTime = `${obj.time[0]}:${obj.time[1]}`
+                this.postData.index = obj.index
+                let repeatStr = obj.repeatByte.join('')
+                if(repeatStr=='00000000'){
+                    this.chooseType = '00000000'
+                }else if(repeatStr=='00111110'){
+                    this.chooseType = '00111110'
+                }else if(repeatStr=='11111111'){
+                    this.chooseType = '11111111'
+                }else{
+                    this.chooseType = '2'
+                    this.postData.repeatByte = obj.repeatByte
+
+                    let typeArrs = obj.repeatByte.map((item, index)=>{
+                        return Boolean(item)
+                    })
+                    this.days = typeArrs;
+                    setTimeout(()=>{
+                        this.chooseDay = false;
+                    }, 20)
+                }
+            }else{
+                this.postData.index = 0;
+            }
 
         },
         computed:{
             ...mapState({
-                // clockList: state => {
-                //     return state.main.clockList
-                // }
+                clockList: state => {
+                    return state.main.clockList
+                }
             })
         },
         watch:{
@@ -175,7 +206,6 @@ import { success, confirm, toast } from './../../utils/toast.js'
                     toast({msg: '请选择重复次数！'})
                     return
                 }
-                
                 this.addClock(this.postData)
                 
                 setTimeout(()=>{
