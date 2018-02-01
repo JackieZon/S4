@@ -82,7 +82,7 @@ import { success } from './../../utils/toast.js'
             getData(id){
                 getDynamicHeartRateDetail({id: id}).then((res)=>{
                     this.comStatus = false;
-                    this.chartData.rows = JSON.parse(res.data.info.hrCountRecords)
+                    this.chartData.rows = JSON.parse(res.data.info.hrCountRecords).reverse();
                     setTimeout(()=>{
                         this.comStatus = true;
                     }, 50)

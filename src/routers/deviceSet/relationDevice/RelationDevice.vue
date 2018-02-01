@@ -21,7 +21,6 @@
                 </yd-input> -->
                 <span slot="right" class="yd-input">
                     <select v-model="deviceType">
-                        <option value="0">请选择手环类型</option>
                         <option value="2">S3</option>
                         <option value="3">S4</option>
                     </select>
@@ -59,7 +58,7 @@
     export default {
         data () {
             return {
-                deviceType: 0,
+                deviceType: 2,
                 deviceSnMac:"",
                 deviceInfoStatus: false,
                 deviceInfo:'',

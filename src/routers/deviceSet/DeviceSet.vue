@@ -38,7 +38,7 @@
                         <span class="span_color" slot="right">未设置</span>
                     </yd-cell-item> -->
             </yd-cell-group>
-
+ <!-- v-if="sex==0" -->
             <yd-cell-group v-if="sex==0">
                 <yd-cell-item>
                     <span slot="left" class="setting-name">女性生理期</span>
@@ -92,12 +92,11 @@ import { getStorage } from './../../utils/device/DataHandler.js'
         },
         mounted () {
 
-            this.setCall = window.localStorage.setCall;
-
             this.userId = window.localStorage.userId;
             this.sex = Number(window.localStorage.sex);
             this.deviceSetInfo = {...this.deviceSetInfo, ...this.deviceGetInfo};
             this.pageType = window.localStorage.pageType;
+            this.setCall = this.callStatus;
 
             console.error(this.pageType)
 
@@ -112,9 +111,11 @@ import { getStorage } from './../../utils/device/DataHandler.js'
             ...mapActions([
                 'changeHolidayReminder',
                 'setAddCall',
+                'taskQueueExec'
             ]),
             ...mapMutations([
-                'deviceInfoSet'
+                'deviceInfoSet',
+                'saveFlagObj'
             ]),
             openPages (name,param) {
                 if(!name) return
@@ -157,15 +158,18 @@ import { getStorage } from './../../utils/device/DataHandler.js'
                 });
             },
             setCycleFlag(){
-                this.changeHolidayReminder()
+                setTimeout(()=>{
+                    this.changeHolidayReminder()
+                    this.taskQueueExec({})
+                },500)
             },
             carriedSetCall(){
 
                 if(this.deviceConnectState){
                     
                     setTimeout(()=>{
-                        window.localStorage.setCall = this.setCall;
                         this.setAddCall({status: this.setCall});
+                        this.taskQueueExec({})
                     }, 500)
 
                 }else{
@@ -191,9 +195,24 @@ import { getStorage } from './../../utils/device/DataHandler.js'
                 deviceConnectState: state =>{
                     return state.main.deviceInfo.connectState
                 },
+                callStatus: state =>{
+                    return state.main.flagObj.callStatus
+                },
             })
         },
         watch:{
+            remindonstate(val, vals){
+                console.error(`女性生理周期开关【${val}】`)
+                if(val == 1){
+                    this.cycleFlag = true;
+                }else{
+                    this.cycleFlag = false;
+                }
+            },
+            callStatus(val, vals){
+                console.error(`来电提醒开关值改变【${val}】`)
+                this.setCall = val;
+            },
             deviceInfoSeting(val, vals){
                 console.error('设备信息')
                 console.error(val)

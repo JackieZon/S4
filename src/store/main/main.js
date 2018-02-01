@@ -11,93 +11,99 @@ import { confirm } from './../../utils/toast'
 let state = {
     taskQueue: [
         {
-            // 屏幕显示数据
-            name: 'getLCDDisplayData',
-            isExec: false
-        },
-        {
-            // 同步时间
-            name: 'setLCDDTime',
-            isExec: false
-        },
-        {
-            // 手环电量查询
-            name: 'getBattery',
-            isExec: false
-        },
-        {
-            //读取里程信息
-            name: 'getLCDDisplayDataNew',
-            isExec: false
-        },
-        {
-            //读取提醒阈值
-            name: 'getFlashingWarningThreshold',
-            isExec: true
-        },
-        {
-            //设置提醒阈值
-            name: 'setFlashingWarningThreshold',
-            isExec: false
-        },
-        {
-            //读取个人信息(身高体重)
-            name: 'getPersonalInfo',
-            isExec: false
-        },
-        {
-            //设置个人信息(身高体重)
-            name: 'setPersonalInfo',
-            isExec: false
-        },
-        {
-            //读取版本
-            name: 'getUserCodeVer',
-            isExec: false
-        },
-        {
-            //节日提醒 女性生理周期提醒
+            //【读取】节日提醒女性生理周期提醒
             name: 'getHolidayReminder',
             isExec: false
         },
         {
-            //读取查询闹钟列表
-            name: 'loopClockListInquire',
+            //【读取】屏幕显示数据
+            name: 'getLCDDisplayData',
             isExec: false
         },
         {
-            //读取久坐提醒
-            name: 'readySedentary',
+            //【读取】读取里程信息
+            name: 'getLCDDisplayDataNew',
             isExec: false
         },
         {
-            //读取久坐开关状态
+            //【读取】读取久坐开关状态
             name: 'readyShock',
             isExec: false
         },
         {
-            //读取运动历史
+            //【读取】读取久坐提醒
+            name: 'readySedentary',
+            isExec: false
+        },
+        {
+            //【读取】读取查询闹钟列表
+            name: 'loopClockListInquire',
+            isExec: false
+        },
+        {
+            //【读取】手环电量查询
+            name: 'getBattery',
+            isExec: false
+        },
+        {
+            //【读取】读取提醒阈值
+            name: 'getFlashingWarningThreshold',
+            isExec: true
+        },
+        {
+            //【读取】读取个人信息(身高体重)
+            name: 'getPersonalInfo',
+            isExec: false
+        },
+        {
+            //【读取】读取版本
+            name: 'getUserCodeVer',
+            isExec: false
+        },
+        {
+            //【设置】同步时间
+            name: 'setLCDDTime',
+            isExec: false
+        },
+        {
+            //【设置】设置提醒阈值
+            name: 'setFlashingWarningThreshold',
+            isExec: false
+        },
+        {
+            //【设置】设置个人信息(身高体重)
+            name: 'setPersonalInfo',
+            isExec: false
+        },
+        {
+            //【读取】读取运动历史
             name: 'getSport',
             isExec: false
         },
         {
-            //读取睡眠
-            name: 'getSleep',
-            isExec: false
-        },
-        {
-            //读取温湿度气压
+            //【读取】读取温湿度气压
             name: 'getTempRHPress',
             isExec: false
         },
         {
-            //读取历史脉搏数据
+            //【读取】读取历史脉搏数据
             name: 'getHistoricalPulse',
+            isExec: false
+        },
+        {
+            //【读取】读取睡眠
+            name: 'getSleep',
             isExec: false
         },
     ],
     taskQueueIndex: 0,
     mainTheadRunIng: false,
+    runCommandStatus: true, // 【true】正常执行任务 【false】暂停
+    historyDataObj:{
+        status: false, // 【true】停止了【为被停止】
+        data: {},
+        t_data: {}
+    },
     config: {
         //实时数据读取线程开关
         readLCDDataTheadEnable: true,
@@ -270,6 +276,11 @@ let state = {
         },
     ],
     clockListIndex: 1,
+    flagObj:{
+        callStatus: false,
+        sedentaryStatus: true,
+        keepStatus: false
+    },
     sedentaryData:{
         status: false,
         repeatByte: [0,0,0,0,0,0,0,0],
@@ -280,6 +291,16 @@ let state = {
 }
 
 const mutations = {
+    // 改变命令执行状态 暂停命令【执行】或【继续】
+    changeRunCommand(state, payload){
+        let { status } = payload
+        console.error(`改变执行命令状态【runCommandStatus】：${status}`)
+        window.localStorage.setItem('runCommandStatus',status)
+        state.runCommandStatus = status;
+    },
+    saveHistoryDataObj(state, payload){
+        state.historyDataObj = { ...state.historyDataObj, ...payload }
+    },
     saveSetCallNum(state, payload){
         console.error(
             `
@@ -289,6 +310,18 @@ const mutations = {
         )
 
         state.setCallNum = payload;
+    },
+    saveFlagObj(state, payload){
+        console.error(
+            `
+                保存手环开关设置
+                callStatus: 【${payload.callStatus}】
+                sedentaryStatus: 【${payload.sedentaryStatus}】
+                keepStatus: 【${payload.keepStatus}】
+            `
+        )
+
+        state.flagObj = { ...state.flagObj, ...payload};
     },
     saveSedentary(state, payload){
         // {
@@ -428,18 +461,15 @@ const actions = {
 
     },
     taskQueueExec: function ({ commit, state, dispatch, getters }, payload) {
-
+        // console.error(`队列任务执行中...`)
         // console.log(`开始执行队列任务：【 taskQueueExec 】`)
-        let { taskQueue, taskQueueIndex } = state
+        let { taskQueue, taskQueueIndex, runCommandStatus } = state
         let { QueueName } = payload
 
         // 改变执行完的任务状态
-        console.warn('执行改变任务状态方法前');
-        console.warn(`QueueName:【${QueueName}】`);
-        console.warn(`QueueName typeOf:【${typeof QueueName}】`);
-
         if(QueueName){
-            console.warn(`接收到同步完成标记的任务【${QueueName}】`);
+            // console.warn('执行改变任务状态方法前');
+            // console.warn(`QueueName:【${QueueName}】`);
             QueueNameFor:
                 for (let task = 0; task < taskQueue.length; task++){
                     if(taskQueue[task].name == QueueName){
@@ -452,11 +482,15 @@ const actions = {
                 }
         }
 
+        // 判断命令是否暂停
+        if(runCommandStatus === false){
+            return
+        }
         // 执行未执行的任务
         QueueLoop:
             for (let i = 0; i < taskQueue.length; i++){
 
-                console.warn(`执行【${taskQueue[i].name}】状态是${taskQueue[i].isExec}`)
+                // console.warn(`执行【${taskQueue[i].name}】状态是${taskQueue[i].isExec}`)
 
                 if(taskQueue[i].isExec === false){
                     console.warn(`状态通过，立即执行【${ taskQueue[i].name }】`)
@@ -551,8 +585,40 @@ const actions = {
     getPersonalInfo({ commit, state, dispatch, getters }, payload) {
         dispatch('SendCmd', { cmd: Cmd.personalInfo, data: '01' });
     },
-
+    // 0x95 震动提醒命令
     setCall({ commit, state, dispatch, getters }, payload) {
+        let { callStatus, sedentaryStatus } = state.flagObj;
+        let num = state.setCallNum;
+        let p = navigator.platform;
+        console.log(
+            `
+                设置来电提醒的值 【${num}】
+                系统类型        【${p}】
+            `
+        )
+        state.taskQueue.push({
+            name: 'setyShock',
+            isExec: false
+        })
+        
+        if(p=='iPhone'){
+        }else{
+            dispatch('changesetCall',{})
+        }
+
+    },
+    //添加设置来电提醒命令 【97】【操作】
+    changesetCall({ commit, state, dispatch, getters }, payload) {
+        let num = state.setCallNum;
+        if(num=='01'){
+            state.taskQueue.push({
+                name: 'setCallX',
+                isExec: false
+            })
+        }
+    },
+    // 来电提醒指令 【0x97】【命令】
+    setCallX({ commit, state, dispatch, getters }, payload) {
         let num = state.setCallNum;
         dispatch('SendCmd', { cmd: Cmd.setCall, data: num });
     },
@@ -567,15 +633,16 @@ const actions = {
     },
     // 设置久坐提醒 【开关】
     setyShock({ commit, state, dispatch, getters }, payload) {
-        let { status } = state.sedentaryData;
 
+        let { callStatus, sedentaryStatus, keepStatus } = state.flagObj;
         console.error(
             `
-                设置久坐提醒开关
-                ${status}
+                提醒开关设置的值
+                【${Number(callStatus)}】【${Number(sedentaryStatus)}】【0】
             `
         )
-        dispatch('SendCmd', { cmd: Cmd.setShock, data: '02' + bytesToHex([0, (status?1:0), 0]) });
+        dispatch('SendCmd', { cmd: Cmd.setShock, data: '02' + bytesToHex([Number(callStatus), Number(sedentaryStatus), 0]) });
+        
     },
     setPersonalInfo({ commit, state, dispatch, getters }, payload) {
         //是否需要设置身高体重
@@ -681,7 +748,9 @@ const actions = {
         
     },
     getSleep({ commit, state, dispatch, getters }, payload) {
-        var t_data = this;
+        let payloadx = payload;
+        let { status, data, t_data } = state.historyDataObj
+        let t_datax = this;
         // console.log('读取睡眠时间')
         commit('configSet', { IsReadHistoryData: true })
         if (typeof (window.sleepDataHandler) !== 'function') {
@@ -690,23 +759,31 @@ const actions = {
                 Super.prototype = DataHandler.prototype;
                 SleepDataHandler.prototype = new Super();
             })();
-            window.sleepDataHandler = new SleepDataHandler(t_data);
+            window.sleepDataHandler = new SleepDataHandler(t_datax);
         }
-        console.log(window.sleepDataHandler)
         //发送请求帧
         window.sleepDataHandler.SendCount = 1;
         window.sleepDataHandler.NeedReply = true;
         window.sleepDataHandler.DataDomain = 0;
 
-        senddataBytes(state.deviceInfo.wecDeviceId, {
-            cmd: Cmd.sleep,
-            data: '',
-            dataHandler: window.sleepDataHandler,
-            t_data: t_data
-        })
+        console.error(`睡眠历史数据任务暂停的状态【${status}】`)
+        if(status===true){
+            console.error(`睡眠被暂停后继续执行历史任务【${status}】【${data.DataDomain}】`)
+            senddataBytes(window.localStorage.wecDeviceId, { cmd: data.Cmd, data: '', dataHandler: data, t_data: t_data })
+        }else{
+            senddataBytes(state.deviceInfo.wecDeviceId, {
+                cmd: Cmd.sleep,
+                data: '',
+                dataHandler: window.sleepDataHandler,
+                t_data: t_datax
+            })
+        }
     },
     getSport({ commit, state, dispatch, getters }, payload) {
-        var t_data = this;
+        console.error(1)
+        let payloadx = payload;
+        let { status, data } = state.historyDataObj
+        let t_datax = this;
         // l.i('读取历史运动数据')
         //commit('configSet',{IsReadHistoryData: true})
         if (typeof (window.sportDataHandler) !== 'function') {
@@ -716,22 +793,35 @@ const actions = {
                 Super.prototype = DataHandler.prototype;
                 SportDataHandler.prototype = new Super();
             })();
-            window.sportDataHandler = new SportDataHandler(t_data);
+            window.sportDataHandler = new SportDataHandler(t_datax);
         }
+        console.error(2)
         //发送请求帧
         window.sportDataHandler.SendCount = 1;
         window.sportDataHandler.NeedReply = true;
         window.sportDataHandler.DataDomain = 0;
 
-        senddataBytes(state.deviceInfo.wecDeviceId, {
-            cmd: Cmd.sports,
-            data: '',
-            dataHandler: window.sportDataHandler,
-            t_data: t_data
-        })
+        console.error(`运动历史数据任务暂停的状态【${status}】【${data.DataDomain}】`)
+        if(status===true){
+
+            console.error(2.1)
+            console.error(`运动被暂停后继续执行历史任务【${status}】【${data.DataDomain}】`)
+            senddataBytes(window.localStorage.wecDeviceId, { cmd: data.Cmd, data: '', dataHandler: data, t_data: t_data })
+
+        }else{
+            console.error(2.2)
+            senddataBytes(state.deviceInfo.wecDeviceId, {
+                cmd: Cmd.sports,
+                data: '',
+                dataHandler: window.sportDataHandler,
+                t_data: t_datax
+            })
+        }
     },
     getTempRHPress({ commit, state, dispatch, getters }, payload) {
-        var t_data = this;
+        let payloadx = payload;
+        let { status, data, t_data } = state.historyDataObj
+        let t_datax = this;
         // l.i('读取历史温湿度气压数据')
         //commit('configSet',{IsReadHistoryData: true})
         if (typeof (window.tempRHPressDataHandler) !== 'function') {
@@ -741,23 +831,30 @@ const actions = {
                 Super.prototype = DataHandler.prototype;
                 TempRHPressDataHandler.prototype = new Super();
             })();
-            window.tempRHPressDataHandler = new TempRHPressDataHandler(t_data);
+            window.tempRHPressDataHandler = new TempRHPressDataHandler(t_datax);
         }
         //发送请求帧 
         window.tempRHPressDataHandler.SendCount = 1;
         window.tempRHPressDataHandler.NeedReply = true;
         window.tempRHPressDataHandler.DataDomain = 0;
 
-        senddataBytes(state.deviceInfo.wecDeviceId, {
-            cmd: Cmd.Temphumpres,
-            data: '',
-            dataHandler: window.tempRHPressDataHandler,
-            t_data: t_data
-        })
-        
+        console.error(`环境历史数据任务暂停的状态【${status}】`)
+        if(status===true){
+            console.error(`环境被暂停后继续执行历史任务【${status}】【${data.DataDomain}】`)
+            senddataBytes(window.localStorage.wecDeviceId, { cmd: data.Cmd, data: '', dataHandler: data, t_data: t_data })
+        }else{
+            senddataBytes(state.deviceInfo.wecDeviceId, {
+                cmd: Cmd.Temphumpres,
+                data: '',
+                dataHandler: window.tempRHPressDataHandler,
+                t_data: t_datax
+            })
+        }
     },
     getHistoricalPulse({ commit, state, dispatch, getters }, payload) {
-        var t_data = this;
+        let payloadx = payload;
+        let { status, data, t_data } = state.historyDataObj
+        let t_datax = this;
         // l.i('读取历史脉搏数据')
         //commit('configSet',{IsReadHistoryData: true})
         if (typeof (window.pulseDataHandler) !== 'function') {
@@ -767,19 +864,25 @@ const actions = {
                 Super.prototype = DataHandler.prototype;
                 PulseDataHandler.prototype = new Super();
             })();
-            window.pulseDataHandler = new PulseDataHandler(t_data);
+            window.pulseDataHandler = new PulseDataHandler(t_datax);
         }
         //发送请求帧
         window.pulseDataHandler.SendCount = 1;
         window.pulseDataHandler.NeedReply = true;
         window.pulseDataHandler.DataDomain = 0;
 
-        senddataBytes(state.deviceInfo.wecDeviceId, {
-            cmd: Cmd.historicalPulse,
-            data: '',
-            dataHandler: window.pulseDataHandler,
-            t_data: t_data
-        })
+        console.error(`脉搏历史数据任务暂停的状态【${status}】`)
+        if(status===true){
+            console.error(`脉搏被暂停后继续执行历史任务【${status}】【${data.DataDomain}】`)
+            senddataBytes(window.localStorage.wecDeviceId, { cmd: data.Cmd, data: '', dataHandler: data, t_data: t_data })
+        }else{
+            senddataBytes(state.deviceInfo.wecDeviceId, {
+                cmd: Cmd.historicalPulse,
+                data: '',
+                dataHandler: window.pulseDataHandler,
+                t_data: t_datax
+            })
+        }
     },
     //更改设备信息
     changeDeviceInfo({ commit, state, dispatch, getters }, payload) {
@@ -811,23 +914,15 @@ const actions = {
     //设置来电提醒
     setAddCall({ commit, state, dispatch, getters }, payload) {
         let { status } = payload;
+        commit('saveFlagObj',{ callStatus: status })
         if(status){
             commit('saveSetCallNum','01')
             console.error('打开来电提醒')
-            state.taskQueue.push({
-                //设置来电提醒
-                name: 'setCall',
-                isExec: false
-            })
         }else{
             commit('saveSetCallNum','02')
             console.error('关闭来电提醒')
-            state.taskQueue.push({
-                //设置来电提醒
-                name: 'setCall',
-                isExec: false
-            })
         }
+        dispatch('setCall',{})
     },
     addSetSedentary({ commit, state, dispatch, getters }, payload) {
         console.error('添加设置久坐【设置】')
@@ -846,22 +941,22 @@ const actions = {
         })
     },
     getDynamicHeartRate({ commit, state, dispatch, getters }, payload){
-        let { taskQueue } = state
+        let { taskQueue, runCommandStatus } = state
 
-        if(taskQueue[taskQueue.length-1].isExec===true){
+        if(runCommandStatus===false){
             commit('setDynamicHeartRate',{ status: 1 })
             dispatch('SendCmd', { cmd: Cmd.dynamicHeartRate, data: '01' });
         }else{
-            confirm({title: '数据同步中，请稍后...',msg:' '}).then((res)=>{
+            confirm({title: '任务执行被关闭请联系开发人员...',msg:' '}).then((res)=>{
                 
             })
         }
     },
     closeDynamicHeartRate({ commit, state, dispatch, getters }, payload){
+        let { taskQueue, dynamicHeartRate } = state
         if(dynamicHeartRate.status==3){
             return
         }else{
-            let { taskQueue, dynamicHeartRate } = state
             if(dynamicHeartRate.heartRateTimer){
                 clearInterval(dynamicHeartRate.heartRateTimer)
             }

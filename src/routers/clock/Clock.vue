@@ -66,10 +66,11 @@ import { success, confirm, toast } from './../../utils/toast.js'
                     let arr = state.main.clockList;
                     let statusArr=[];
                     arr.map((i)=>{
-                        if(i.status){
+                        if(i.status==true){
                             statusArr.push(i.index)
                         }
                     })
+                    console.error(statusArr.length)
                     return (statusArr.length<10?true:false);
                 }
             })

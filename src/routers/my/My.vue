@@ -67,7 +67,6 @@ import { success } from './../../utils/toast.js'
                 }
             }
         },
-
         mounted () {
             console.log(`userAgent===`)
             console.log(navigator.userAgent)
@@ -82,6 +81,11 @@ import { success } from './../../utils/toast.js'
             this.userInfo.birthday = this.userInfo.birthday.split("T")[0];
             this.userInfo.height > 0 ? this.userInfo.height : this.userInfo.height = 172;
             this.userPhone.mobile = this.userInfo.mobile;
+        },
+        watch: {
+            'userInfo.sex'(val, vals){
+                window.localStorage.setItem('sex',val)
+            },
         },
         destroyed () {
                 l.w('My.destroyed')

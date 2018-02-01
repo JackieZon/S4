@@ -372,13 +372,25 @@ export function DataHandler(cmd, framesize, t_data) {
                 case Cmd.setCall:
                     {
                         if (packet.FrameNum.datadomain == 13) {
-                            dispatch('taskQueueExec', { QueueName: 'setCall' })
-                            toast({msg: '来电提醒设置成功！'})
+                            console.error(`来电提醒设置成功【setCallX】`)
+                            dispatch('taskQueueExec', { QueueName: 'setCallX' })
+                            // toast({msg: '来电提醒设置成功！'})
                         } else {
                             console.error('来电提醒设置失败！')
                         }
                         break;
                     }
+                // case Cmd.setShock:
+                //     {
+                //         if (packet.FrameNum.datadomain == 13) {
+                //             console.error(`来电提醒设置成功【setCall】`)
+                //             dispatch('taskQueueExec', { QueueName: 'setCall' })
+                //             toast({msg: '来电提醒设置成功！'})
+                //         } else {
+                //             console.error('来电提醒设置失败！')
+                //         }
+                //         break;
+                //     }
                 case Cmd.setSedentary:
                     {
                         if (packet.FrameNum.datadomain == 13) {
@@ -427,7 +439,7 @@ export function DataHandler(cmd, framesize, t_data) {
                         if (packet.FrameNum.datadomain == 13) {
                             
                             if(packet.Data.length==0){
-                                toast({msg: '久坐提醒设置成功！'})
+                                toast({msg: '设置成功！'})
                                 dispatch('taskQueueExec', { QueueName: 'setyShock' })
                             }else{
 
@@ -437,7 +449,7 @@ export function DataHandler(cmd, framesize, t_data) {
 
                                 console.error(
                                     `
-                                        久坐提醒数据 [开关]
+                                        手环设置的开关状态【开关】
                                     `
                                 )
                                 console.error({
@@ -448,8 +460,10 @@ export function DataHandler(cmd, framesize, t_data) {
                                 
                                 dispatch('taskQueueExec', { QueueName: 'readyShock' })
                                 
-                                commit('saveSedentary', {
-                                    status: Boolean(data2)
+                                commit('saveFlagObj', {
+                                    callStatus: Boolean(data1),
+                                    sedentaryStatus: Boolean(data2),
+                                    keepStatus: Boolean(data3),
                                 })
     
                             }
@@ -469,6 +483,7 @@ export function DataHandler(cmd, framesize, t_data) {
             const { t_data } = packet
             const { commit, state } = packet.t_data
             let vm = state.main
+            console.error(`执行命令的状态【${vm.runCommandStatus}】；在{localStorage}里：【${window.localStorage.localStorage}】`)
             //需要回复
             if (packet.FrameNum.needreply) {
                 //数据域为数据长度
@@ -482,7 +497,22 @@ export function DataHandler(cmd, framesize, t_data) {
                         this.SendCount = 1;
                         this.NeedReply = true;
                         this.DataDomain = 14;
-                        senddataBytes(getStorage.deviceId(), { cmd: this.Cmd, data: '', dataHandler: this, t_data: t_data })
+
+                        // 停止继续发送命令读取历史数据
+                        commit('saveHistoryDataObj',{ status: !vm.runCommandStatus, data: this, t_data: t_data })
+                        if(vm.runCommandStatus===false){
+                            console.error(`【已暂停】历史数据读取`)
+                            commit('tooltipInfoSet', '')
+                            
+                            // 跳过当前命令执行下一条
+                            setTimeout(()=>{
+                                dispatch('taskQueueExec', { QueueName: packet.QueueName })
+                            }, 1500)
+                        }else{
+                            console.error(`【继续】历史数据读取`)
+                            senddataBytes(getStorage.deviceId(), { cmd: this.Cmd, data: '', dataHandler: this, t_data: t_data })
+                        }
+
                     }
                     else {
                         l.i('历史数据已经被读空了！');
@@ -512,7 +542,23 @@ export function DataHandler(cmd, framesize, t_data) {
                                 this.SendCount = 1;
                                 this.NeedReply = false;
                                 this.DataDomain = 11;
-                                senddataBytes(getStorage.deviceId(), { cmd: this.Cmd, data: '', dataHandler: this, t_data: t_data })
+                                
+                                // 停止继续发送命令读取历史数据
+                                commit('saveHistoryDataObj',{ status: !vm.runCommandStatus, data: this, t_data: t_data })
+                                if(vm.runCommandStatus===false){
+                                    console.error(`【已暂停】历史数据读取`)
+                                    commit('tooltipInfoSet', '')
+
+                                    // 跳过当前命令执行下一条
+                                    setTimeout(()=>{
+                                        dispatch('taskQueueExec', { QueueName: packet.QueueName })
+                                    }, 1500)
+
+                                }else{
+                                    console.error(`【继续】历史数据读取`)
+                                    senddataBytes(getStorage.deviceId(), { cmd: this.Cmd, data: '', dataHandler: this, t_data: t_data })
+                                }
+
 
                             } else {
                                 l.w('服务器以保存失败')
@@ -533,7 +579,21 @@ export function DataHandler(cmd, framesize, t_data) {
                     this.SendCount = 1;
                     this.NeedReply = false;
                     this.DataDomain = 13;
-                    senddataBytes(getStorage.deviceId(), { cmd: this.Cmd, data: '', dataHandler: this, t_data: t_data })
+                    
+                    // 停止继续发送命令读取历史数据
+                    commit('saveHistoryDataObj',{ status: !vm.runCommandStatus, data: this, t_data: t_data })
+                    if(vm.runCommandStatus===false){
+                        console.error(`【已暂停】历史数据读取`)
+                        commit('tooltipInfoSet', '')
+
+                        // 跳过当前命令执行下一条
+                        setTimeout(()=>{
+                            dispatch('taskQueueExec', { QueueName: packet.QueueName })
+                        }, 1500)
+                    }else{
+                        console.error(`【继续】历史数据读取`)
+                        senddataBytes(getStorage.deviceId(), { cmd: this.Cmd, data: '', dataHandler: this, t_data: t_data })
+                    }
                 }
             }
 
@@ -703,7 +763,12 @@ export function SleepDataHandler(t_data) {
                 
                 this.DataList.push(param);
                 commit('configSet', { ReceiveDataLen: (vm.config.ReceiveDataLen + 1) })
-                commit('tooltipInfoSet', `睡眠数据同步中(${vm.config.ReceiveDataLen}/${vm.config.DataLen})，请不要关闭页面`)
+                if(vm.config.ReceiveDataLen<vm.config.DataLen){
+                    console.log(`已读取的数据长度【${vm.config.ReceiveDataLen}】总长度【${vm.config.DataLen}】`)
+                    commit('tooltipInfoSet', `睡眠数据同步中(${vm.config.ReceiveDataLen}/${vm.config.DataLen})，请不要关闭页面`)
+                }else{
+                    commit('tooltipInfoSet', '')
+                }
 
                 //DataInterface.AddDeviceDataSleep(param)
             }
@@ -809,7 +874,12 @@ export function SportDataHandler(t_data) {
                 l.w(param);
 
                 commit('configSet', { ReceiveDataLen: (vm.config.ReceiveDataLen + 1) })
-                commit('tooltipInfoSet', `运动数据同步中(${vm.config.ReceiveDataLen}/${vm.config.DataLen})，请不要关闭页面`)
+                if(vm.config.ReceiveDataLen<vm.config.DataLen){
+                    console.log(`已读取的数据长度【${vm.config.ReceiveDataLen}】总长度【${vm.config.DataLen}】`)
+                    commit('tooltipInfoSet', `运动数据同步中(${vm.config.ReceiveDataLen}/${vm.config.DataLen})，请不要关闭页面`)
+                }else{
+                    commit('tooltipInfoSet', '')
+                }
             }
         };
         SportDataHandler._initialized = true;
@@ -903,7 +973,12 @@ export function TempRHPressDataHandler(t_data) {
                 l.w(param);
 
                 commit('configSet', { ReceiveDataLen: (vm.config.ReceiveDataLen + 1) })
-                commit('tooltipInfoSet', `温湿度气压数据同步中(${vm.config.ReceiveDataLen}/${vm.config.DataLen})，请不要关闭页面`)
+                if(vm.config.ReceiveDataLen<vm.config.DataLen){
+                    console.log(`已读取的数据长度【${vm.config.ReceiveDataLen}】总长度【${vm.config.DataLen}】`)
+                    commit('tooltipInfoSet', `温湿度气压数据同步中(${vm.config.ReceiveDataLen}/${vm.config.DataLen})，请不要关闭页面`)
+                }else{
+                    commit('tooltipInfoSet', '')
+                }
             }
         };
         TempRHPressDataHandler._initialized = true;
@@ -1006,7 +1081,12 @@ export function PulseDataHandler(t_data) {
                 l.w(param);
 
                 commit('configSet', { ReceiveDataLen: (vm.config.ReceiveDataLen + 1) })
-                commit('tooltipInfoSet', `历史脉搏数据同步中(${vm.config.ReceiveDataLen}/${vm.config.DataLen})，请不要关闭页面`)
+                if(vm.config.ReceiveDataLen<vm.config.DataLen){
+                    console.log(`已读取的数据长度【${vm.config.ReceiveDataLen}】总长度【${vm.config.DataLen}】`)
+                    commit('tooltipInfoSet', `历史脉搏数据同步中(${vm.config.ReceiveDataLen}/${vm.config.DataLen})，请不要关闭页面`)
+                }else{
+                    commit('tooltipInfoSet', '')
+                }
             }
         };
         PulseDataHandler._initialized = true;

@@ -11,7 +11,7 @@
             <yd-cell-item>
                 <span slot="left" class="setting-name">久坐提醒</span>
                 <span slot="right">
-                    <yd-switch v-model="postData.status"></yd-switch>
+                    <yd-switch v-model="postData.status" @click.native="changeSedentary"></yd-switch>
                 </span>
             </yd-cell-item>
             <yd-cell-item arrow>
@@ -133,18 +133,24 @@ import { success, confirm, toast } from './../../utils/toast.js'
 
             this.countSedentaryData()
             this.postData = {...this.sedentaryData}
+            this.postData.status = this.sedentaryStatus;
+
         },
         computed:{
             ...mapState({
                 sedentaryData: state => {
                     return state.main.sedentaryData
                 },
-                sedentaryDataStatus: state => {
-                    return state.main.sedentaryData.status
+                sedentaryStatus: state =>{
+                    return state.main.flagObj.sedentaryStatus
                 },
             })
         },
         watch:{
+            sedentaryStatus(val, vals){
+                console.error(`开关值改变【${val}】`)
+                this.postData.status = val;
+            },
             chooseType(val, vals){
                 if(val=='2'){
                     this.chooseDay = true;
@@ -177,8 +183,7 @@ import { success, confirm, toast } from './../../utils/toast.js'
                 console.log(this.postData.endTime)
             },
             'postData.status'(val, vals){
-                console.log(val)
-                this.addSetyShock()
+                this.saveFlagObj({sedentaryStatus: val})
             },
             'sedentaryData.startTime'(val, vals){
 
@@ -202,10 +207,24 @@ import { success, confirm, toast } from './../../utils/toast.js'
                 'addClock',
                 'addSetSedentary',
                 'addSetyShock',
+                'taskQueueExec',
             ]),
             ...mapMutations([
-                'saveSedentary'
+                'saveSedentary',
+                'saveFlagObj'
             ]),
+            changeSedentary(){
+                setTimeout(()=>{
+                    // 保存久坐提醒数据
+                    this.saveSedentary(this.postData)
+                    // 设置久坐提醒开关
+                    this.addSetyShock()
+                    // 设置久坐时间数据
+                    this.addSetSedentary()
+                    // 立即执行任务
+                    this.taskQueueExec({})
+                }, 500)
+            },
             countSedentaryData(){
 
                 let repeatByte = this.sedentaryData.repeatByte;

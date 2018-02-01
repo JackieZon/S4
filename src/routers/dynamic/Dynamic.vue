@@ -4,7 +4,7 @@
             <div class="startBtn">
                 <div class="item">
                     <div class="btn" @click="openDynamicHeartRate">
-                        {{dynamicHeartRateStatus==3?'开始':'关闭'}}
+                        {{dynamicHeartRateStatus==3?'开始':'结束'}}
                     </div>
                 </div>
             </div>
@@ -65,10 +65,19 @@ import { success, toast } from './../../utils/toast.js'
         },
         created(){
             console.log('组件初始化完成！')
+            this.clearHeartRateList();
+            // 关闭任务列表执行状态
+            this.changeRunCommand({status: false})
+            this.tooltipInfoSet('')
         },
         beforeDestroy(){
             this.setDynamicHeartRate({ status: 3 })
             this.closeDynamicHeartRate()
+            // 清除循环闪动
+            clearInterval(this.setintervalNum);
+            // 打开任务列表执行状态
+            this.changeRunCommand({status: true})
+            this.taskQueueExec({})
         },
         mounted () {
         },
@@ -99,14 +108,16 @@ import { success, toast } from './../../utils/toast.js'
         methods: {
             ...mapMutations([
                 'setDynamicHeartRate',
-                'clearHeartRateList'
+                'clearHeartRateList',
+                'changeRunCommand',
+                'tooltipInfoSet',
             ]),
             ...mapActions([
-                "userInfoSet",
+                'userInfoSet',
                 'changePersonalInfo',
                 'getDynamicHeartRate',
                 'closeDynamicHeartRate',
-
+                'taskQueueExec'
             ]),
             setintervalCount(){
                 if(this.setintervalNum==0){

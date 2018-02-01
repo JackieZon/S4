@@ -354,7 +354,7 @@ export function senddataToDevice(selDeviceID, packetObj, cmdBytes) {
     var x = 0;
 
     l.l("开始发送数据HEX:");
-    // l.i(bytesToHex(cmdBytes));
+    l.i(bytesToHex(cmdBytes));
     var base64Data = bytesToBase64(cmdBytes);
 
     console.log('发送的base64数据')

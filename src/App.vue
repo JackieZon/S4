@@ -41,7 +41,7 @@ export default {
         }
         if(to.name=='Home'){
           this.clearHeartRateList();
-          $('title').html('健康记录')
+          $('title').html('健康信息')
         }
         if(to.name=='HealthHistory'){
           $('title').html('健康历史')
@@ -61,16 +61,23 @@ export default {
         if(to.name=='My'){
           $('title').html('个人信息')
         }
+
+        // 暂停蓝牙命令执行
+        if(to.name=="Dynamic"){
+          $('title').html('动态心率')
+        }
       },
   },
   methods:{
+    ...mapMutations([
+      'changeRunCommand',
+      'deviceInfoSetingSet',
+      'clearHeartRateList',
+    ]),
     ...mapActions([
       "userInfoSet",
-      "deviceInfoSet"
-    ]),
-    ...mapMutations([
-      "deviceInfoSetingSet",
-      'clearHeartRateList'
+      "deviceInfoSet",
+      'getSport'
     ]),
     /**
     *获取个人信息
