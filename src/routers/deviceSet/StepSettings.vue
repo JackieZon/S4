@@ -76,7 +76,8 @@ export default {
     },
     methods:{
         ...mapActions([
-            'changeDeviceInfo'
+            'changeDeviceInfo',
+            'taskQueueExec'
         ]),
         ...mapMutations([
             'deviceInfoSetingSet',
@@ -88,6 +89,7 @@ export default {
                 this.deviceInfoSet(this.postData)
                 l.w('HeartRate.destroyed')
                 this.changeDeviceInfo()
+                this.taskQueueExec({})
             })
         },
         toastShow(){

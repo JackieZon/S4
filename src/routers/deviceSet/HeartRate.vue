@@ -13,32 +13,96 @@
         </yd-cell-item>
       </div>
       <div class="heart-rate">
+        <yd-cell-item arrow>
+          <span slot="left" class="setting-name">高心率提醒</span>
+          <span slot="right" @click="heartRateMax.visible=true">{{postData.heartRateCountRemind}}次/分钟</span>
+        </yd-cell-item>
+      </div>
+      <div class="heart-rate">
+        <yd-cell-item arrow>
+          <span slot="left" class="setting-name">低心率提醒</span>
+          <span slot="right" @click="heartRateMin.visible=true">{{postData.lowHeartRateValue}}次/分钟</span>
+        </yd-cell-item>
+      </div>
+      <!-- <div class="heart-rate">
         <div class="divs"></div>
         <yd-cell-item>
           <span slot="left" class="setting-name">心率设置</span>
           <yd-spinner slot="right" min="80" max="150" unit="5" v-model="postData.heartRateCountRemind"></yd-spinner>
-          <!-- <span style="margin-left: .2rem;" slot="right"></span> -->
-        </yd-cell-item>
-      </div>
-      <!-- <p class="body-notice">测量频率变小会影响手环续航时间变短</p>
-      <div class="heart-rate">
-        <yd-cell-item>
-          <span slot="left" class="setting-name">检测频率</span>
-          <span slot="right">{{ postData.basalMetabolism }}分钟</span>
+          <span style="margin-left: .2rem;" slot="right"></span>
         </yd-cell-item>
       </div> -->
+      <div class="heart-rate" style="margin-top: 15px;">
+        <yd-cell-item>
+          <span slot="left" class="setting-name">心率测量</span>
+          <span slot="right">
+            <yd-switch v-model="heartRateGaugeData.status" @click.native="toastShow()"></yd-switch>
+          </span>
+        </yd-cell-item>
+      </div>
+      <div class="heart-rate">
+        <yd-cell-item>
+          <span slot="left" class="setting-name">测量频率</span>
+          <span slot="right" @click="heartRateGauge.visible=true">{{heartRateGaugeData.value||0}}分钟</span>
+        </yd-cell-item>
+      </div>
+      <p class="body-notice">测量频率变小会影响手环续航时间变短</p>
     </div>
+
+    <picker class="picker" v-model="heartRateMax.visible" :data-items="heartRateMax.items" @change="heartRateMaxChange">
+        <TitleCom slot="top-content" title="最心率" v-on:cancel="heartRateMax.visible=false" v-on:confirm="heartRateMaxConfirm"></TitleCom>
+    </picker>
+    <picker class="picker" v-model="heartRateMin.visible" :data-items="heartRateMin.items" @change="heartRateMinChange">
+        <TitleCom slot="top-content" title="低心率" v-on:cancel="heartRateMin.visible=false" v-on:confirm="heartRateMinConfirm"></TitleCom>
+    </picker>
+    <picker class="picker" v-model="heartRateGauge.visible" :data-items="heartRateGauge.items" @change="heartRateGaugeChange">
+        <TitleCom slot="top-content" title="测量频率" v-on:cancel="heartRateGauge.visible=false" v-on:confirm="heartRateGaugeConfirm"></TitleCom>
+    </picker>
+
   </div>
 </template>
 <script>
+import TitleCom from './../../common/TitleCom.vue'
+import picker from 'vue-3d-picker';
 import { mapActions, mapState, mapMutations } from 'vuex'
 import { setDeciceSetInfo } from "./../../sverse/api.js"
 import { toast } from '../../utils/toast';
 export default {
   data(){
     return {
+      heartRateMax:{
+        chooseVal: 100,
+        visible: false,
+        items: [
+            {
+                values: ['80', '85', '90', '95', '100'],
+            }
+        ]
+      },
+      heartRateMin:{
+        chooseVal: 100,
+        visible: false,
+        items: [
+            {
+                values: ['80', '85', '90', '95', '100'],
+            }
+        ]
+      },
+      heartRateGauge:{
+        chooseVal: 100,
+        visible: false,
+        items: [
+            {
+                values: ['5', '10', '15', '20', '30'],
+            }
+        ]
+      },
       a:1,
       heartRateRemind: false,
+      heartRateGaugeData: {
+        status: false,
+        value: 0,
+      },
       postData: {
           deviceType: 2,
           heartRateCountRemind: 0,
@@ -52,10 +116,15 @@ export default {
       }
     }
   },
+  components:{
+      [picker.name]: picker,
+      TitleCom,
+  },
   mounted () {
     this.heartRateRemind = (this.deviceInfoSeting.heartRateRemind==1?true:false)
     this.postData = {...this.postData, ...this.deviceInfoSeting}
-    $('input').attr('readonly',true)
+    this.heartRateGaugeData.status = localStorage.getItem('heartRateGaugeStatus')
+    this.heartRateGaugeData.value = localStorage.getItem('heartRateGaugeValue')
     // this.heartRateData.DeviceSetHeartRateTestInterval = 60
   },
   // destroyed () {
@@ -77,7 +146,8 @@ export default {
   },
   methods: {
     ...mapActions([
-      'changeDeviceInfo'
+      'changeDeviceInfo',
+      'taskQueueExec'
     ]),
     ...mapMutations([
       'deviceInfoSetingSet',
@@ -93,12 +163,38 @@ export default {
         this.deviceInfoSet(this.postData)
         l.w('HeartRate.destroyed')
         this.changeDeviceInfo()
+        this.taskQueueExec({})
       })
 
     },
     toastShow(){
       toast({msg: '设置成功!'})
+    },
+
+    heartRateMaxChange(val){
+      this.heartRateMax.chooseVal = val;
+    },
+    heartRateMaxConfirm(){
+      this.postData.heartRateCountRemind = this.heartRateMax.chooseVal;
+      this.heartRateMax.visible = false;
+    },
+
+    heartRateMinChange(val){
+      this.heartRateMin.chooseVal = val;
+    },
+    heartRateMinConfirm(){
+      this.postData.lowHeartRateValue = this.heartRateMin.chooseVal;
+      this.heartRateMin.visible = false;
+    },
+
+    heartRateGaugeChange(val){
+      this.heartRateGauge.chooseVal = val;
+    },
+    heartRateGaugeConfirm(){
+      this.heartRateGaugeData.value = this.heartRateGauge.chooseVal;
+      this.heartRateGauge.visible = false;
     }
+    
   },
   watch: {
     'heartRateRemind':{
@@ -122,11 +218,31 @@ export default {
       },
       deep:true
     },
+    'postData.lowHeartRateValue':{
+      handler:function (val,oldVal) {
+        if(this.deviceConnectState){
+          this.setDeciceSetInfo();
+        }else{
+          toast({msg: '手环已断开连接，请稍后再试！'})
+        }
+      },
+      deep:true
+    },
+    'heartRateGaugeData.status'(val, vals){
+      localStorage.setItem('heartRateGaugeStatus', val)
+    },
+    'heartRateGaugeData.value'(val, vals){
+      localStorage.setItem('heartRateGaugeValue', val)
+    },
+    
   }
 }
 </script>
 <style lang="less" scoped>
     #heartRate {
+      .picker{
+          overflow: hidden;
+      }
       height: 100%;
       background-color: rgb(235, 235, 235);
       .head-notice{
@@ -136,9 +252,9 @@ export default {
         padding: .3rem .4rem;
       }
       .body-notice{
-        font-size: .32rem;
+        font-size: .14rem*2;
         color: #333;
-        padding: .3rem .4rem;
+        padding: .2rem .2rem;
       }
       .heart-rate{
         background-color: #fff;

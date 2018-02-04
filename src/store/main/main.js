@@ -6,7 +6,8 @@ import { Cmd } from './../../utils/device/Packet'
 import { DataHandler, LCDDisplayDataHandler, SleepDataHandler, SportDataHandler, TempRHPressDataHandler, PulseDataHandler } from './../../utils/device/DataHandler'
 import { senddataBytes } from './../../utils/device/WXDevice'
 import { bytesToHex, byteToHex, hexToBytes } from './../../utils/device/HexUtils'
-import { confirm } from './../../utils/toast'
+import { confirm, toast } from './../../utils/toast'
+import { linkBlue } from './../../utils/device/WXDevice'
 
 let state = {
     taskQueue: [
@@ -424,7 +425,10 @@ const actions = {
         //     lastSendSuccessTime: 数据发送成功的时间
         // `)
 
-        let { connectState } = state.deviceInfo
+        let { connectState, wecDeviceId } = state.deviceInfo
+        if(connectState==false){
+            linkBlue(wecDeviceId)
+        }
         //保持单例运行
         if (state.mainTheadRunIng) return;
         // l.i('运行中...')
@@ -611,6 +615,7 @@ const actions = {
     changesetCall({ commit, state, dispatch, getters }, payload) {
         let num = state.setCallNum;
         if(num=='01'){
+            alert(`添加久坐提醒命令:【${num}】`)
             state.taskQueue.push({
                 name: 'setCallX',
                 isExec: false
@@ -620,7 +625,7 @@ const actions = {
     // 来电提醒指令 【0x97】【命令】
     setCallX({ commit, state, dispatch, getters }, payload) {
         let num = state.setCallNum;
-        dispatch('SendCmd', { cmd: Cmd.setCall, data: num });
+        dispatch('SendCmd', { cmd: Cmd.setCall, data: num + bytesToHex([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) });
     },
 
     // 查询久坐提醒【久坐信息】
@@ -682,7 +687,7 @@ const actions = {
         const {
             rawDeviceSetHeartRateMax, rawDeviceSetStepTarget, rawDeviceSetTempDiff,
             heartRateCountRemind, sportTarget, temperatureDifferenceValue,
-            heartRateRemind, temperatureDifferenceRemind, sportTargetRemind
+            heartRateRemind, temperatureDifferenceRemind, sportTargetRemind,lowHeartRateValue
          } = state.deviceInfo
 
         // rawDeviceSetHeartRateMax 手环里面的心率值（为零等于未开启）
@@ -703,13 +708,25 @@ const actions = {
 
         console.error(`heartRateRemind:${heartRateRemind},rawDeviceSetHeartRateMax:${rawDeviceSetHeartRateMax},heartRateCountRemind:${heartRateCountRemind},rawDeviceSetStepTarget:${rawDeviceSetStepTarget},sportTarget:${sportTarget},rawDeviceSetTempDiff:${rawDeviceSetTempDiff},temperatureDifferenceValue:${temperatureDifferenceValue}`)
          
+        const heartMax = (heartRateRemind==0?0:heartRateCountRemind)
+        const heartMin = (heartRateRemind==0?0:lowHeartRateValue)
+        
         const ratemax = heartRateRemind ? heartRateCountRemind : 0; // 设置心率值
         const steptarget = hexToBytes(Number( sportTargetRemind ? sportTarget : 0).toString(16).PadLeft(4)).reverse(); // 设置运动步数
         const tempdiff = parseInt('0' + Number(temperatureDifferenceRemind ? temperatureDifferenceValue : 0).toString(2).PadLeft(7), 2);  // 设置温差提醒
         
-        l.w(`设置提醒阀值执行ratemax:${ratemax},steptarget:${bytesToHex(steptarget)},sportTarget:${sportTarget},tempdiff:${tempdiff}`)
+        console.warn(
+            `
+                设置提醒阀值执行
+                高心率:【${heartMax}】
+                低心率:【${heartMin}】
+                步数steptarget:【${bytesToHex(steptarget)}】
+                步数sportTarget:【${sportTarget}】
+                温差tempdiff:【${tempdiff}】
+            `
+        )
 
-        dispatch('SendCmd', { cmd: Cmd.FlashingWarningThreshold, data: '02' + bytesToHex([ratemax,40].concat(steptarget, [tempdiff])) });
+        dispatch('SendCmd', { cmd: Cmd.FlashingWarningThreshold, data: '02' + bytesToHex([heartMax,heartMin].concat(steptarget, [tempdiff])) });
 
         // dispatch('taskQueueExec', { isSetSuccess: true })
         // if (rawDeviceSetHeartRateMax != heartRateCountRemind ||
@@ -893,6 +910,15 @@ const actions = {
             isExec: false
         })
     },
+    //读取界面显示信息
+    changeGetHolidayReminder({ commit, state, dispatch, getters }, payload) {
+        // l.w('changeDeviceInfo')
+        state.taskQueue.push({
+            //【读取】节日提醒女性生理周期提醒
+            name: 'getHolidayReminder',
+            isExec: false
+        })
+    },
     //更改体重身高
     changePersonalInfo({ commit, state, dispatch, getters }, payload) {
         // l.w('changePersonalInfo')
@@ -942,6 +968,12 @@ const actions = {
     },
     getDynamicHeartRate({ commit, state, dispatch, getters }, payload){
         let { taskQueue, runCommandStatus } = state
+        let { connectState } = state.deviceInfo
+
+        if(connectState==false){
+            toast({msg: '设备已断开链接，请稍后再试！'})
+            return
+        }
 
         if(runCommandStatus===false){
             commit('setDynamicHeartRate',{ status: 1 })
@@ -954,6 +986,12 @@ const actions = {
     },
     closeDynamicHeartRate({ commit, state, dispatch, getters }, payload){
         let { taskQueue, dynamicHeartRate } = state
+
+        if(connectState==false){
+            toast({msg: '设备已断开链接，请稍后再试！'})
+            return
+        }
+        
         if(dynamicHeartRate.status==3){
             return
         }else{

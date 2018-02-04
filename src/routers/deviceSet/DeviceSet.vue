@@ -111,7 +111,8 @@ import { getStorage } from './../../utils/device/DataHandler.js'
             ...mapActions([
                 'changeHolidayReminder',
                 'setAddCall',
-                'taskQueueExec'
+                'taskQueueExec',
+                'changeGetHolidayReminder'
             ]),
             ...mapMutations([
                 'deviceInfoSet',
@@ -159,7 +160,11 @@ import { getStorage } from './../../utils/device/DataHandler.js'
             },
             setCycleFlag(){
                 setTimeout(()=>{
+                    // 设置女性生理周期
                     this.changeHolidayReminder()
+                    // 读取女性生理周期
+                    this.changeGetHolidayReminder()
+                    // 立即执行任务
                     this.taskQueueExec({})
                 },500)
             },

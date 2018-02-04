@@ -12,6 +12,22 @@ window.sendTimeOut = null;
 window.lastDeviceID = null;
 window.lastpacketObj = null;
 
+export const linkBlue = (deviceId) => {
+    console.error(
+        `
+            执行连接手环蓝牙@@
+            设备ID是【${deviceId}】
+        `
+    )
+    if(deviceId){
+        wx.invoke('connectWXDevice', { 'deviceId': deviceId }, function (res) {
+            console.error('执行连接设备返回数据');
+            console.error('connectWXDevice', res);
+            console.error(res);
+        });
+    }
+}
+
 export const config = (store, $router) => {
     const { commit, dispatch, state } = store
     
@@ -113,6 +129,7 @@ export const config = (store, $router) => {
                         commit('deviceInfoSet', { connectState: false })
                     l.i(res.deviceId + '连接断开');
                     // alert({msg:'连接断开'})
+                    linkBlue(res.deviceId)
                     commit('tooltipInfoSet', '')
                     break;
             }

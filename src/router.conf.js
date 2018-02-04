@@ -19,6 +19,7 @@ const FemaleSet = resolve => require(['./routers/deviceSet/female/FemaleSet.vue'
 const Clock = resolve => require(['./routers/clock/Clock.vue'],resolve);
 const AddClock = resolve => require(['./routers/clock/AddClock.vue'],resolve);
 const Sedentary = resolve => require(['./routers/sedentary/Sedentary.vue'],resolve);
+const Test = resolve => require(['./routers/test/Test.vue'],resolve);
 
 Vue.use(Router)
 
@@ -28,6 +29,11 @@ export default new Router({
       path: '/',
       name: 'Home',
       component: Home,
+    },
+    {
+      path: '/Test',
+      name: 'Test',
+      component: Test,
     },
     {
       path: '/HealthHistory',
