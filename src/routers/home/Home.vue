@@ -127,7 +127,8 @@
             </div> 
             <div class="option">
                 <div class="option_img">
-                    <img src="./../../assets/images/health_icon_11.png" alt="">
+                    <img v-if="sex==1" src="./../../assets/images/health_icon_11.png" alt="">
+                    <img v-else src="./../../assets/images/health_icon_11_red.png" alt="">
                 </div>
                 <div class="option_content">
                     <p><span>{{deviceInfo.nextremind}}</span>天</p>
@@ -146,6 +147,10 @@
     </div>
 </template>
 <script>
+
+    // import iconImg from 
+    // import iconImgx from 
+    
     import battery1 from './../../assets/icon/battery1.svg'
     import battery2 from './../../assets/icon/battery2.svg'
     import battery3 from './../../assets/icon/battery3.svg'
@@ -162,6 +167,7 @@
                 battery: [battery1, battery2, battery3, battery4, battery5]
             }
         },
+
         mounted () {
             this.userInfo = {...this.userInfo,...this.userGetInfo}
         },
@@ -176,6 +182,9 @@
                 },
                 userGetInfo: (state) => {
                     return state.main.userInfo
+                },
+                sex: (state) => {
+                    return state.main.userInfo.sex
                 },
                 tooltipInfo: (state) => {
                     return state.main.tooltipInfo

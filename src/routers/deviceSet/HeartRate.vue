@@ -41,7 +41,7 @@
         </yd-cell-item>
       </div>
       <div class="heart-rate">
-        <yd-cell-item>
+        <yd-cell-item arrow>
           <span slot="left" class="setting-name">测量频率</span>
           <span slot="right" @click="heartRateGauge.visible=true">{{heartRateGaugeData.value||0}}分钟</span>
         </yd-cell-item>
@@ -75,7 +75,7 @@ export default {
         visible: false,
         items: [
             {
-                values: ['80', '85', '90', '95', '100'],
+                values: ['80', '85', '90', '95', '100', '150'],
             }
         ]
       },
@@ -93,7 +93,7 @@ export default {
         visible: false,
         items: [
             {
-                values: ['5', '10', '15', '20', '30'],
+                values: ['5', '10', '15', '20', '30', '60'],
             }
         ]
       },

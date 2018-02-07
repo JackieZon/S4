@@ -37,7 +37,7 @@ export default {
       '$route' (to, from) {
         console.log(to)
         if(to.name=='DeviceSet'){
-          $('title').html('我的设备')
+          $('title').html('设备')
         }
         if(to.name=='Home'){
           this.clearHeartRateList();
@@ -61,11 +61,18 @@ export default {
         if(to.name=='My'){
           $('title').html('个人信息')
         }
-
+        
         // 暂停蓝牙命令执行
         if(to.name=="Dynamic"){
           $('title').html('动态心率')
         }
+        if(to.name=='DynamicRecord'){
+          $('title').html('动态心率')
+        }
+        if(to.name=='DynamicInfo'){
+          $('title').html('动态心率详情')
+        }
+        
       },
   },
   methods:{

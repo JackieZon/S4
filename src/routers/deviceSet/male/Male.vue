@@ -4,7 +4,7 @@
             <yd-cell-group>
                 <yd-cell-item arrow>
                     <span slot="left">时间</span>
-                    <yd-datetime type="date" v-model="postData.remindDate" slot="right"></yd-datetime>
+                    <yd-datetime type="date" :start-date="startDate" v-model="postData.remindDate" slot="right"></yd-datetime>
                 </yd-cell-item>
                 <yd-cell-item arrow>
                     <span slot="left">循环</span>
@@ -51,6 +51,7 @@ import { alert, toast } from './../../../utils/toast'
     export default {
         data () {
             return {
+                startDate: '',
                 showPage: true,
                 cycleType: ['仅此一次','每周','每月'],
                 postData:{
@@ -69,6 +70,16 @@ import { alert, toast } from './../../../utils/toast'
 
             this.getImportantDateRemind()
 
+            // 设置时间段
+            let nowDates = new Date();
+            let year = Number(nowDates.getFullYear());
+            let month = Number(nowDates.getMonth()+1);
+            let date = Number(nowDates.getDate());
+            let hours = nowDates.getHours()
+            let minutes = nowDates.getMinutes()
+            let seconds = nowDates.getSeconds()
+            this.startDate = `${year}-${(month<10?'0'+month:month)}-${ (date<10?'0'+date:date)} ${ (hours<10?'0'+hours:hours) }:${ (minutes<10?'0'+minutes:minutes) }:${ (seconds<10?'0'+seconds:seconds) }`;
+            
         },
         methods:{
             defaultTime(){

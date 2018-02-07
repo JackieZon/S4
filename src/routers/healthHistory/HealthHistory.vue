@@ -341,7 +341,7 @@
                 var seriesNameArr = ['温度','湿度'];
                 var seriesColorArr = ['#ff1432','#59c2ff'];
                 var seriesDataArr = [t_data.dataWristTemperature,t_data.dataWristHumidity];
-                t_data.chartDoubleLine( elID, anchor, yAxisNameArr, boundaryGapArr, seriesNameArr, seriesColorArr, seriesDataArr, '温湿度', [{ min: 20 , max: 40, interval: 10 }, { min: 20, max: 100, interval: 20 }]);
+                t_data.chartDoubleLine( elID, anchor, yAxisNameArr, boundaryGapArr, seriesNameArr, seriesColorArr, seriesDataArr, '温湿度', [{ min: 0 , max: 40, interval: 10 }, { min: 0, max: 100, interval: 20 }]);
             },
             //绘制气压图表
             chartPressure(anchor) {

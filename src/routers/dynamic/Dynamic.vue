@@ -26,8 +26,8 @@ import VeLine from 'v-charts/lib/line'
 import { apiUrl } from "./../../utils/subei_config.js"
 import { Toast, Loading, Confirm } from 'vue-ydui/dist/lib.rem/dialog';
 import { mapState, mapActions, mapMutations } from 'vuex'
-import { getMemberInfo,simulationLogin,userInfoEdit, postSaveHeartRate } from "./../../sverse/api.js"
-import { success, toast } from './../../utils/toast.js'
+import { getMemberInfo, simulationLogin, userInfoEdit, postSaveHeartRate } from "./../../sverse/api.js"
+import { success, toast, confirm } from './../../utils/toast.js'
     export default {
         components:{
             [VeLine.name]: VeLine
@@ -40,8 +40,8 @@ import { success, toast } from './../../utils/toast.js'
                     columns: ['testTime', 'hrCount'],
                     rows: [
                         {
-                            testTime: '2018-01-01 00:00:00',
-                            hrCount: 90
+                            testTime: '',
+                            hrCount: 0
                         }
                     ]
                 },
@@ -137,8 +137,18 @@ import { success, toast } from './../../utils/toast.js'
                 }
             },
             openRecord(){
-                this.setDynamicHeartRate({ status: 3 })
-                this.openPages('DynamicRecord',{})
+                if(this.dynamicHeartRateStatus==3){
+                    this.openPages('DynamicRecord',{})
+                }else{
+
+                    confirm({title: '是否结束本次动态心率测试！',msg:' '}).then((res)=>{
+                        if(res==1){
+                            this.setDynamicHeartRate({ status: 3 })
+                            this.openPages('DynamicRecord',{})
+                        }
+                    })
+
+                }
             },
             openPages (name,param) {
                 param = (JSON.stringify(param) == "{}" ? {} : param);
@@ -150,8 +160,14 @@ import { success, toast } from './../../utils/toast.js'
                 if(this.dynamicHeartRateStatus==3){
                     this.getDynamicHeartRate()
                 }else{
-                    this.postData();
-                    this.closeDynamicHeartRate()
+
+                    confirm({title: '是否结束本次动态心率测试！',msg:' '}).then((res)=>{
+                        if(res==1){
+                            this.postData();
+                            this.closeDynamicHeartRate()
+                        }
+                    })
+
                 }
             },
             postData(){

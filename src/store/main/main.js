@@ -426,9 +426,9 @@ const actions = {
         // `)
 
         let { connectState, wecDeviceId } = state.deviceInfo
-        if(connectState==false){
-            linkBlue(wecDeviceId)
-        }
+        // if(connectState==false){
+        //     linkBlue(wecDeviceId)
+        // }
         //保持单例运行
         if (state.mainTheadRunIng) return;
         // l.i('运行中...')

@@ -81,8 +81,37 @@ import { success } from './../../utils/toast.js'
             },
             getData(id){
                 getDynamicHeartRateDetail({id: id}).then((res)=>{
+
                     this.comStatus = false;
-                    this.chartData.rows = JSON.parse(res.data.info.hrCountRecords).reverse();
+                    // this.chartData.rows
+                    let rowsData = JSON.parse(res.data.info.hrCountRecords);
+
+                    let rows = rowsData.map((item)=>{
+                        let recordsDay = item.testTime.split(' ')[0]
+                        let recordsTime = item.testTime.split(' ')[1]
+                        let recordsDayx = recordsDay.split('-').map((item)=>{
+                            let num = Number(item)
+                            return (num<10?`0${num}`:num)
+                        })
+                        let recordsTimex = recordsTime.split(':').map((item)=>{
+                            let num = Number(item)
+                            return (num<10?`0${num}`:num)
+                        })
+                        var timeArr = [
+                            recordsDayx.join('-'),
+                            recordsTimex.join(':'),
+                        ]
+                        return {
+                            testTime: timeArr.join(' '),
+                            hrCount: item.hrCount
+                        }
+                    })
+
+                    console.error(`处理后的时间字符串`)
+                    console.error(rows)
+
+                    this.chartData.rows = rows;
+                    
                     setTimeout(()=>{
                         this.comStatus = true;
                     }, 50)

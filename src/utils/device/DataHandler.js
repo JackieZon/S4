@@ -95,6 +95,7 @@ export function DataHandler(cmd, framesize, t_data) {
                 case Cmd.LCDDisplayDataNew:
                     {
                         if (packet.FrameNum.datadomain == 13) {
+
                             l.w('读取里程成功！')
                             dispatch('taskQueueExec', { QueueName: 'getLCDDisplayDataNew' })
 
@@ -104,6 +105,7 @@ export function DataHandler(cmd, framesize, t_data) {
                             dispatch('deviceInfoSet', { km: km })
 
                             l.w(`里程${km}`)
+                            
                         } else {
                             l.e({ msg: '读取里程失败！' })
                         }
@@ -272,7 +274,7 @@ export function DataHandler(cmd, framesize, t_data) {
                                         commit('pushHeartRateList', {testTime: `${date} ${time}`, hrCount: valx})
                                     }else if(valx==1||valx==255){
                                         if(hrCountFig==1||(hrCountFig%10)==0){
-                                            toast({msg: '测量中，请稍后...'});
+                                            // toast({msg: '测量中，请稍后...'});
                                             hrCountFig = hrCountFig+1;
                                         }
                                     }
@@ -280,7 +282,7 @@ export function DataHandler(cmd, framesize, t_data) {
                                 }else{
                                     // toast({msg: '正在检测心率请稍后'})
                                     if(this.num==1){
-                                        toast({msg: '正在检测心率请稍后'})
+                                        // toast({msg: '正在检测心率请稍后'})
                                     }
                                     console.log('正在检测心率请稍后')
                                     // clearInterval(this.loopHeartRate);
